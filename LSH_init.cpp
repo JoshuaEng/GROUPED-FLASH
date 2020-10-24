@@ -10,7 +10,7 @@ LSH::LSH(int hashType, int _K_in, int _L_in, int _rangePow_in)	{
 	_hashType = hashType;
 
 	_K = _K_in;
-	L = _L_in;
+	_L = _L_in;
 	_numTables = _L_in; // In densified minhash, _numTables is equivalan to _L. Initialized for general usage just in case.
 	_rangePow = _rangePow_in;
 

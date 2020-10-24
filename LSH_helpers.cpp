@@ -10,7 +10,7 @@ void LSH::getOptimalMinhash(unsigned int *hashIndices, unsigned int *probeDataId
 #endif
 
 #ifndef DEBUG
-#pragma omp parallel for
+// #pragma omp parallel for
 #endif
 	for (int inputIdx = 0; inputIdx < numInputEntries; inputIdx++) {
 #if defined DEBUG
@@ -29,7 +29,7 @@ void LSH::getOptimalMinhash(unsigned int *hashIndices, unsigned int *probeDataId
 #if defined DEBUG
 		std::cout << "Exit optimalMinHash()" << std::endl;
 #endif
-		for (int tb = 0; tb < L; tb++)
+		for (int tb = 0; tb < _L; tb++)
 		{
 			unsigned int index = 0;
 			for (int k = 0; k < _K; k++)
@@ -134,8 +134,8 @@ void LSH::srp_openmp_sparse(unsigned int *hashes, int *dataIdx, float *dataVal, 
 	unsigned int a1, a2, b1, b2, sparseLen, indice, start, ok;
 	float value;
 
-#pragma omp parallel private(sparseLen, indice, start, ok, a1, a2, b1, b2, value)
-#pragma	omp for
+// #pragma omp parallel private(sparseLen, indice, start, ok, a1, a2, b1, b2, value)
+// #pragma	omp for
 	for (int i = 0; i < numInputEntries; i++) {
 		start = dataMarker[i];
 		sparseLen = dataMarker[i + 1] - start;

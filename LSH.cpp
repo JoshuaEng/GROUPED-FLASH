@@ -47,8 +47,8 @@ void LSH::getHashIdx(unsigned int *hashIndices, unsigned int *hashes, int numInp
 		exit(1);
 	}
 	unsigned int hashIdx;
-#pragma omp parallel private(hashIdx)
-#pragma omp parallel for
+// #pragma omp parallel private(hashIdx)
+// #pragma omp parallel for
 	for (int inputIdx = 0; inputIdx < numInputEntries; inputIdx ++) {
 		for (int tb = 0; tb < _numTables; tb++) {
 			hashIdx = 0;
@@ -69,8 +69,8 @@ void LSH::getHashIdx(unsigned int *hashIndices, unsigned int *dataIdx, unsigned 
 		exit(1);
 	}
 	unsigned int hashIdx;
-#pragma omp parallel private(hashIdx)
-#pragma omp parallel for
+// #pragma omp parallel private(hashIdx)
+// #pragma omp parallel for
 	for (int inputIdx = 0; inputIdx < numInputEntries; inputIdx++) {
 		for (int tb = 0; tb < _numTables; tb++) {
 			hashIdx = 0;

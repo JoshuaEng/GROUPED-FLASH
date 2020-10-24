@@ -40,7 +40,7 @@ private:
 
 	/* Optimal Densified Minhash. */
 	int *_randHash, _randa, _numhashes, _lognumhash, _K;
-	int L;
+	int _L;
 	int *rand1;
 
 	/* Function definitions. */

@@ -107,10 +107,10 @@ Then modify the file location and parameters below in the Parameters section. */
 #define AVAILABLE_TOPK				1024
 #define TOPK						128
 
-#define BASEFILE		"./dataset/webspam/trigram.svm"
-#define QUERYFILE		"./dataset/webspam/trigram.svm"
-#define GTRUTHINDICE	"./dataset/webspam/webspam_tri_gtruth_indices.txt"
-#define GTRUTHDIST		"./dataset/webspam/webspam_tri_gtruth_distances.txt"
+#define BASEFILE		"../webspam_wc_normalized_trigram.svm"
+#define QUERYFILE		"./webspam_wc_normalized_trigram.svm"
+#define GTRUTHINDICE	"../webspam/webspam_tri_gtruth_indices.txt"
+#define GTRUTHDIST		"../webspam/webspam_tri_gtruth_distances.txt"
 
 #endif
 

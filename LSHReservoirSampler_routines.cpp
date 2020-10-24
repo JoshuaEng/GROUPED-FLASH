@@ -19,7 +19,7 @@ void LSHReservoirSampler::HashAddCPUTB(unsigned int *allprobsHash, unsigned int*
 
 void LSHReservoirSampler::kSelect(unsigned int *tally, unsigned int *outputs, int segmentSize, int numQueryEntries, int topk) {
 	// SegmentedSort.
-#pragma omp parallel for
+// #pragma omp parallel for
 	for (int i = 0; i < numQueryEntries; i++) {
 		std::sort(tally + i * segmentSize, tally + i * segmentSize + segmentSize);
 	}
@@ -28,7 +28,7 @@ void LSHReservoirSampler::kSelect(unsigned int *tally, unsigned int *outputs, in
 	unsigned int *tallyCnt = new unsigned int[segmentSize * numQueryEntries]();
 
 #if !defined SINGLETHREAD_COUNTING
-#pragma omp parallel for
+// #pragma omp parallel for
 #endif
 
 	for (int i = 0; i < numQueryEntries; i++) {
@@ -55,7 +55,7 @@ void LSHReservoirSampler::kSelect(unsigned int *tally, unsigned int *outputs, in
 		}
 	}
 	// KV SegmentedSort.
-#pragma omp parallel for
+// #pragma omp parallel for
 	for (int i = 0; i < numQueryEntries; i++) {
 		unsigned int *vec = tally + i * segmentSize;
 		unsigned int *cntvec = tallyCnt + i * segmentSize;
