@@ -20,6 +20,7 @@ private:
   size_t internal_hash_length;
   size_t internal_hash_bits;
   size_t hash_size;
+  size_t points_added_so_far;
   std::vector<uint32_t> *rambo_array; 
   std::vector<uint32_t> *meta_rambo;
   uint32_t *records;

@@ -41,6 +41,7 @@ FLING::FLING(size_t row_count, size_t blooms_per_row, LSH* hash_function, size_t
   this->hash_size = hash_size;
   this->internal_hash_bits = hash_bits;
   this->internal_hash_length = 1 << internal_hash_bits;
+  this->points_added_so_far = 0;
   this->rambo_array = new vector<uint32_t>[hash_repeats * internal_hash_length];
   this->records = new uint32_t[hash_repeats * num_bins];
 
@@ -75,16 +76,14 @@ void FLING::insert(int num_inputs, int* data_ids, float* data_vals, int* data_ma
 
 	hash_function->getHash(hashes, indices, data_ids, data_vals, data_marker, num_inputs, 1);
 
-  size_t start = indices[0];
   vector<uint32_t> row_indices_arr[num_inputs];
-  for (size_t i = start; i < start + num_inputs; i++){
-    row_indices_arr[i - start] = get_hashed_row_indices(i);
+  for (size_t i = 0; i < num_inputs; i++){
+    row_indices_arr[i] = get_hashed_row_indices(i + points_added_so_far);
   }
 
   for (size_t rep = 0; rep < hash_repeats; rep++) {
-    for (size_t index = start; index < start + num_inputs; index++) {
-      cout << start << " " << index << " " << indices[rep * num_inputs + index] << endl;
-      vector<uint32_t> row_indices = row_indices_arr[index - start];
+    for (size_t index = 0; index < num_inputs; index++) {
+      vector<uint32_t> row_indices = row_indices_arr[index];
       for (uint32_t r = 0; r < row_count; r++) {
         uint32_t b = row_indices.at(r);
         rambo_array[rep * internal_hash_length + hashes[rep * num_inputs + index]]
@@ -92,6 +91,8 @@ void FLING::insert(int num_inputs, int* data_ids, float* data_vals, int* data_ma
       }
     }
   }
+
+  points_added_so_far += num_inputs;
 }
 
 /**
