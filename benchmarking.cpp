@@ -103,11 +103,27 @@ void benchmark_sparse() {
 					etime_0 << " ms." << std::endl;
 			}
 		}
-
+		fling->finalize_construction();
 		end = Clock::now();
 		etime_0 = (end - begin).count() / 1000000;
 		std::cout << "Completed, used " << etime_0 << "ms. \n";
 
+		std::cout << "Querying...\n";
+		begin = Clock::now();
+		for (int i = 0; i < NUMQUERY; i++) {
+			uint32_t recall_buffer[TOPK];
+			fling->query(sparse_indice, sparse_val, sparse_marker + i, TOPK, recall_buffer);
+			for (size_t j = 0; j < TOPK; j++) {
+				queryOutputs[TOPK * i + j] = recall_buffer[j];
+			}
+		}
+		// for (size_t i = 0; i < NUMQUERY * TOPK; i++) {
+		// 	cout << i << " " << queryOutputs[i] << endl;
+		// }
+
+		end = Clock::now();
+		etime_0 = (end - begin).count() / 1000000;
+		std::cout << "Queried " << NUMQUERY << " datapoints, used " << etime_0 << "ms. \n";
 	}
 
 	/* Quality evaluations. */
