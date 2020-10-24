@@ -8,6 +8,7 @@
 #include "omp.h"
 #include "benchmarking.h"
 #include "MatMul.h"
+#include "FLING.h"
 
 #include <string>
 #include <sstream>
@@ -21,18 +22,6 @@ void benchmark_sparse() {
 	float etime_0, etime_1, etime_2;
 	auto begin = Clock::now();
 	auto end = Clock::now();
-
-	std::cout << "Initializing data structures and random numbers ..." << std::endl;
-	begin = Clock::now();
-	LSH *hashFamily = new LSH(2, K, NUMTABLES, RANGE_POW); // Initialize LSH hash.
-	LSHReservoirSampler *myReservoir = new LSHReservoirSampler(hashFamily, RANGE_POW, NUMTABLES, RESERVOIR_SIZE,
-		DIMENSION, RANGE_ROW_U, NUMBASE, QUERYPROBES, HASHINGPROBES, OCCUPANCY); // Initialize hashtables and other datastructures.
-
-	end = Clock::now();
-	etime_0 = (end - begin).count() / 1000000;
-	std::cout << "Completed, used " << etime_0 << "ms. \n";
-
-	myReservoir->showParams(); // Print out parameters.
 
 	std::cout << "Reading groundtruth ... " << std::endl;
 	unsigned int* gtruth_indice = new unsigned int[NUMQUERY * AVAILABLE_TOPK];
@@ -51,41 +40,83 @@ void benchmark_sparse() {
 	etime_0 = (end - begin).count() / 1000000;
 	std::cout << "Completed, used " << etime_0 << "ms. \n";
 
-	std::cout << "Adding data to hashtable / Preprocessing / Indexing ...\n";
-	int hash_chunk = NUMBASE / NUMHASHBATCH;
-	begin = Clock::now();
-	for (int b = 0; b < NUMHASHBATCH; b++) {
-		myReservoir->add(hash_chunk, sparse_indice, sparse_val, sparse_marker + b * hash_chunk + NUMQUERY);
-		if (b % BATCHPRINT == 0) {
-			end = Clock::now();
-			etime_0 = (end - begin).count() / 1000000;
-			std::cout << "Batch " << b << "(datapoint " << (b * hash_chunk + NUMQUERY) << "), already taken " <<
-				etime_0 << " ms." << std::endl;
-			myReservoir->checkTableMemLoad();
+	unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
+	if (!USE_GROUPS) {
+		std::cout << "Initializing data structures and random numbers ..." << std::endl;
+		begin = Clock::now();
+		LSH *hashFamily = new LSH(2, K, NUMTABLES, RANGE_POW); // Initialize LSH hash.
+		LSHReservoirSampler *myReservoir = new LSHReservoirSampler(hashFamily, RANGE_POW, NUMTABLES, RESERVOIR_SIZE,
+			DIMENSION, RANGE_ROW_U, NUMBASE, QUERYPROBES, HASHINGPROBES, OCCUPANCY); // Initialize hashtables and other datastructures.
+		end = Clock::now();
+		etime_0 = (end - begin).count() / 1000000;
+		std::cout << "Completed, used " << etime_0 << "ms. \n";
+
+		myReservoir->showParams(); // Print out parameters.
+
+
+		std::cout << "Adding data to hashtable / Preprocessing / Indexing ...\n";
+		int hash_chunk = NUMBASE / NUMHASHBATCH;
+		begin = Clock::now();
+		for (int b = 0; b < NUMHASHBATCH; b++) {
+			myReservoir->add(hash_chunk, sparse_indice, sparse_val, sparse_marker + b * hash_chunk + NUMQUERY);
+			if (b % BATCHPRINT == 0) {
+				end = Clock::now();
+				etime_0 = (end - begin).count() / 1000000;
+				std::cout << "Batch " << b << "(datapoint " << (b * hash_chunk + NUMQUERY) << "), already taken " <<
+					etime_0 << " ms." << std::endl;
+				myReservoir->checkTableMemLoad();
+			}
 		}
+
+		end = Clock::now();
+		etime_0 = (end - begin).count() / 1000000;
+		std::cout << "Completed, used " << etime_0 << "ms. \n";
+
+		std::cout << "Querying...\n";
+		begin = Clock::now();
+		myReservoir->ann(NUMQUERY, sparse_indice, sparse_val, sparse_marker, queryOutputs, TOPK);
+
+		end = Clock::now();
+		etime_0 = (end - begin).count() / 1000000;
+		std::cout << "Queried " << NUMQUERY << " datapoints, used " << etime_0 << "ms. \n";
+	}
+	else {
+		std::cout << "Using groups!" << std::endl;
+		std::cout << "Initializing data structures and random numbers ..." << std::endl;
+		begin = Clock::now();
+		LSH *hashFamily = new LSH(2, K, NUMTABLES, RANGE_POW); // Initialize LSH hash.
+		// TODO: Try lots of params/make them constants?
+		FLING *fling = new FLING(3, 30000, hashFamily, RANGE_POW, NUMTABLES, NUMBASE);
+		end = Clock::now();
+		etime_0 = (end - begin).count() / 1000000;
+		std::cout << "Completed, used " << etime_0 << "ms. \n";
+
+		std::cout << "Adding data to hashtable / Preprocessing / Indexing ...\n";
+		int hash_chunk = NUMBASE / NUMHASHBATCH;
+		begin = Clock::now();
+		for (int b = 0; b < NUMHASHBATCH; b++) {
+			fling->insert(hash_chunk, sparse_indice, sparse_val, sparse_marker + b * hash_chunk + NUMQUERY);
+			if (b % BATCHPRINT == 0) {
+				end = Clock::now();
+				etime_0 = (end - begin).count() / 1000000;
+				std::cout << "Batch " << b << "(datapoint " << (b * hash_chunk + NUMQUERY) << "), already taken " <<
+					etime_0 << " ms." << std::endl;
+			}
+		}
+
+		end = Clock::now();
+		etime_0 = (end - begin).count() / 1000000;
+		std::cout << "Completed, used " << etime_0 << "ms. \n";
+
 	}
 
-	end = Clock::now();
-	etime_0 = (end - begin).count() / 1000000;
-	std::cout << "Completed, used " << etime_0 << "ms. \n";
-
-	std::cout << "Querying...\n";
-	unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
-	begin = Clock::now();
-	myReservoir->ann(NUMQUERY, sparse_indice, sparse_val, sparse_marker, queryOutputs, TOPK);
-
-	end = Clock::now();
-	etime_0 = (end - begin).count() / 1000000;
-	std::cout << "Queried " << NUMQUERY << " datapoints, used " << etime_0 << "ms. \n";
-
+	/* Quality evaluations. */
 	const int nCnt = 10;
 	int nList[nCnt] = { 1, 10, 20, 30, 32, 40, 50, 64, 100, TOPK };
 	const int gstdCnt = 8;
 	float gstdVec[gstdCnt] = { 0.95, 0.90, 0.85, 0.80, 0.75, 0.70, 0.65, 0.50 };
 	const int tstdCnt = 10;
 	int tstdVec[tstdCnt] = { 1, 10, 20, 30, 32, 40, 50, 64, 100, TOPK };
-
-	/* Quality evaluations. */
 	similarityMetric(sparse_indice, sparse_val, sparse_marker,
 		sparse_indice, sparse_val, sparse_marker + NUMQUERY, queryOutputs, gtruth_dist,
 		NUMQUERY, TOPK, AVAILABLE_TOPK, nList, nCnt);

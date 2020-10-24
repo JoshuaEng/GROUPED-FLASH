@@ -8,6 +8,7 @@ Then modify the file location and parameters below in the Parameters section. */
 //#define URL
 #define WEBSPAM_TRI
 //#define KDD12
+#define USE_GROUPS true
 
 /* Parameters. */
 
