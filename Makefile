@@ -12,14 +12,14 @@ COBJS := $(CSOURCES:%.c=$(COBJDIR)/%.o)
 
 OBJS = $(CPPOBJS) $(COBJS)
 
-OPT_FLAGS   := -fno-strict-aliasing -O2 -fopenmp
+OPT_FLAGS   := -O2 -fopenmp
 
 INC := /usr/include/
 
 LIB := -L/usr/lib64/
 LIB += -fopenmp
 
-CXXFLAGS := -m64 -DUNIX -std=c++11 $(WARN_FLAGS) $(OPT_FLAGS) -I$(INC)
+CXXFLAGS := -m64 -DUNIX -std=c++11 -g -fno-omit-frame-pointer $(WARN_FLAGS) $(OPT_FLAGS) -I$(INC)
 CFLAGS := -m64 -DUNIX $(WARN_FLAGS) $(OPT_FLAGS) -I$(INC)
 
 LDFLAGS := $(LIBRARY_PATH) $(LIB)

@@ -1,2 +1,6 @@
 runme
 cppobjs/
+annotate-result
+*.svg
+perf.*
+*.txt

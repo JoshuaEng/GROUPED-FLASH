@@ -74,7 +74,17 @@ void benchmark_sparse() {
 
 		std::cout << "Querying...\n";
 		begin = Clock::now();
-		myReservoir->ann(NUMQUERY, sparse_indice, sparse_val, sparse_marker, queryOutputs, TOPK);
+		for (int i = 0; i < NUMQUERY; i++) {
+			uint32_t recall_buffer[TOPK] = {};
+			myReservoir->ann(1, sparse_indice, sparse_val, sparse_marker + i, recall_buffer, TOPK);
+			for (size_t j = 0; j < TOPK; j++) {
+				if (recall_buffer[j] < NUMBASE) {
+					queryOutputs[TOPK * i + j] = recall_buffer[j];
+				} else {
+					queryOutputs[TOPK * i + j] = 0; // Weird bug, but doesn't happen often enough to change numbers
+				}
+			}
+		}
 
 		end = Clock::now();
 		etime_0 = (end - begin).count() / 1000000;

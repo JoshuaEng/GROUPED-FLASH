@@ -116,52 +116,33 @@ void FLING::query(int* data_ids, float* data_vals, int* data_marker, size_t quer
   hash_function->getHash(hashes, indices, data_ids, data_vals, data_marker, 1, 1);
 
   // Get observations
-  size_t index = 0;
+  vector<uint16_t> counts(num_bins, 0);
   for (size_t rep = 0; rep < hash_repeats; rep++) {
     vector<uint32_t> to_add = rambo_array[internal_hash_length * rep + hashes[rep]];
     for (uint32_t rambo_cell : to_add) {
-      records[index++] = rambo_cell;
+      counts[rambo_cell]++;
     }
   }
 
-  // Populate sorted counts array in descending order
-  vector<size_t> counts(row_count * blooms_per_row);
-  for (size_t i = 0; i < index; i++) {
-    counts[records[i]]++;
-  }
-  vector<size_t> count_counts(hash_repeats + 1, 0);
-  for (size_t count : counts) {
-    count_counts[count]++;
-  }
-  vector<size_t> offsets(hash_repeats + 1, 0);
-  for (size_t i = 1; i <= hash_repeats; i++) {
-    offsets[i] = count_counts[i - 1] + offsets[i - 1];
-  }
-  vector<size_t> sorted(row_count * blooms_per_row);
-  for (size_t i = 0; i < row_count * blooms_per_row; i++) {
-    size_t this_count = counts[i];
-    sorted[num_bins - offsets[this_count] - 1] = i;
-    offsets[this_count]++;
+  vector<uint32_t> sorted[hash_repeats + 1];
+  for (uint32_t i = 0; i < num_bins; i++) {
+    sorted[counts[i]].push_back(i);
   }
 
   // Determine the earliest goal_num_points that occur R times
   vector<uint8_t> num_counts(num_points, 0); 
   uint32_t threshhold = 0;
   size_t num_found = 0;
-  // These ones we know can't exceed count
-  for (size_t i = 0; i < row_count - 1; i++) {
-    for (uint32_t point : meta_rambo[sorted[i]]) {
-      num_counts[point]++;
-    }
-  }
   // Determine the first goal_num_points that exceed count
-  for (size_t i = row_count - 1; ; i++) {
-    for (uint32_t point : meta_rambo[sorted[i]]) {
-      if (++num_counts[point] == row_count) {
-        query_output[num_found] = point;
-        if (++num_found == query_goal) {
-          return;
-        }
+  for (int rep = hash_repeats; rep >= 0; rep--) {
+    for (uint32_t bin : sorted[rep]) {
+      for (uint32_t point : meta_rambo[bin]) {
+         if (++num_counts[point] == row_count) {
+          query_output[num_found] = point;
+          if (++num_found == query_goal) {
+            return;
+          }
+      }
       }
     }
   }
