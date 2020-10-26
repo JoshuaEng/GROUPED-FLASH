@@ -43,7 +43,6 @@ FLING::FLING(size_t row_count, size_t blooms_per_row, LSH* hash_function, size_t
   this->internal_hash_length = 1 << internal_hash_bits;
   this->points_added_so_far = 0;
   this->rambo_array = new vector<uint32_t>[hash_repeats * internal_hash_length];
-  this->records = new uint32_t[hash_repeats * num_bins];
 
 
   // Create meta rambo
@@ -62,7 +61,6 @@ FLING::FLING(size_t row_count, size_t blooms_per_row, LSH* hash_function, size_t
 }
 
 FLING::~FLING() {
-  delete this->hash_function;
   delete[] this->rambo_array;
   delete[] this->meta_rambo;
 }
@@ -117,15 +115,19 @@ void FLING::query(int* data_ids, float* data_vals, int* data_marker, size_t quer
 
   // Get observations
   vector<uint16_t> counts(num_bins, 0);
-  for (size_t rep = 0; rep < hash_repeats; rep++) {
+  for (size_t rep = 0; rep < hash_repeats; ++rep) {
     vector<uint32_t> to_add = rambo_array[internal_hash_length * rep + hashes[rep]];
     for (uint32_t rambo_cell : to_add) {
-      counts[rambo_cell]++;
+      ++counts[rambo_cell];
     }
   }
 
   vector<uint32_t> sorted[hash_repeats + 1];
-  for (uint32_t i = 0; i < num_bins; i++) {
+  size_t size_guess = num_bins / (hash_repeats + 1);
+  for (vector<uint32_t> &v : sorted) {
+    v.reserve(size_guess);
+  }
+  for (uint32_t i = 0; i < num_bins; ++i) {
     sorted[counts[i]].push_back(i);
   }
 
@@ -134,7 +136,7 @@ void FLING::query(int* data_ids, float* data_vals, int* data_marker, size_t quer
   uint32_t threshhold = 0;
   size_t num_found = 0;
   // Determine the first goal_num_points that exceed count
-  for (int rep = hash_repeats; rep >= 0; rep--) {
+  for (int rep = hash_repeats; rep >= 0; --rep) {
     for (uint32_t bin : sorted[rep]) {
       for (uint32_t point : meta_rambo[bin]) {
          if (++num_counts[point] == row_count) {
@@ -142,7 +144,7 @@ void FLING::query(int* data_ids, float* data_vals, int* data_marker, size_t quer
           if (++num_found == query_goal) {
             return;
           }
-      }
+        }
       }
     }
   }

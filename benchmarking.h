@@ -8,7 +8,7 @@ Then modify the file location and parameters below in the Parameters section. */
 //#define URL
 #define WEBSPAM_TRI
 //#define KDD12
-#define USE_GROUPS true
+#define USE_GROUPS false
 
 /* Parameters. */
 
@@ -87,9 +87,9 @@ Then modify the file location and parameters below in the Parameters section. */
 
 #define K							4
 #define RANGE_POW					18
-#define RANGE_ROW_U					15
+#define RANGE_ROW_U					18
 
-#define NUMTABLES					32
+#define NUMTABLES					200
 #define RESERVOIR_SIZE				64
 #define OCCUPANCY					1
 

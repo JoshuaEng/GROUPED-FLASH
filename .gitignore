@@ -4,3 +4,4 @@ annotate-result
 *.svg
 perf.*
 *.txt
+*.data
