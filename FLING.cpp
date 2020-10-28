@@ -17,20 +17,20 @@
 
 using namespace std;
 
-vector<uint32_t> FLING::get_hashed_row_indices(size_t index) {
+vector<uint> FLING::get_hashed_row_indices(uint index) {
   string key = to_string(index);
-  size_t key_length = to_string(index).size();
-  vector<uint32_t> *hashvals = new vector<uint32_t>;
-  uint32_t op;
-  for (size_t i = 0; i < row_count; i++) {
+  uint key_length = to_string(index).size();
+  vector<uint> *hashvals = new vector<uint>;
+  uint op;
+  for (uint i = 0; i < row_count; i++) {
     MurmurHash3_x86_32(key.c_str(), key_length, i, &op); // seed is row number
     hashvals->push_back(op % blooms_per_row);
   }
   return *hashvals;
 }
 
-FLING::FLING(size_t row_count, size_t blooms_per_row, LSH* hash_function, size_t hash_bits, 
-  size_t hash_repeats, size_t num_points) {
+FLING::FLING(uint row_count, uint blooms_per_row, LSH* hash_function, uint hash_bits, 
+  uint hash_repeats, uint num_points) {
 
   this->row_count = row_count;
   this->blooms_per_row = blooms_per_row;
@@ -42,20 +42,20 @@ FLING::FLING(size_t row_count, size_t blooms_per_row, LSH* hash_function, size_t
   this->internal_hash_bits = hash_bits;
   this->internal_hash_length = 1 << internal_hash_bits;
   this->points_added_so_far = 0;
-  this->rambo_array = new vector<uint32_t>[hash_repeats * internal_hash_length];
+  this->rambo_array = new vector<uint>[hash_repeats * internal_hash_length];
 
 
   // Create meta rambo
-  meta_rambo = new vector<uint32_t>[row_count * blooms_per_row];
-  for (size_t point = 0; point < num_points; point++) {
+  meta_rambo = new vector<uint>[row_count * blooms_per_row];
+  for (uint point = 0; point < num_points; point++) {
     vector<uint> hashvals = FLING::get_hashed_row_indices(point);
-    for (size_t r = 0; r < row_count; r++) {
+    for (uint r = 0; r < row_count; r++) {
       meta_rambo[hashvals[r] + blooms_per_row * r].push_back(point);
     }
   }
 
   // Sort array entries in meta rambo
-  for (size_t i = 0; i < num_bins; i++) {
+  for (uint i = 0; i < num_bins; i++) {
     sort(meta_rambo[i].begin(), meta_rambo[i].end());
   }
 }
@@ -74,16 +74,16 @@ void FLING::insert(int num_inputs, int* data_ids, float* data_vals, int* data_ma
 
 	hash_function->getHash(hashes, indices, data_ids, data_vals, data_marker, num_inputs, 1);
 
-  vector<uint32_t> row_indices_arr[num_inputs];
-  for (size_t i = 0; i < num_inputs; i++){
+  vector<uint> row_indices_arr[num_inputs];
+  for (uint i = 0; i < num_inputs; i++){
     row_indices_arr[i] = get_hashed_row_indices(i + points_added_so_far);
   }
 
-  for (size_t rep = 0; rep < hash_repeats; rep++) {
-    for (size_t index = 0; index < num_inputs; index++) {
-      vector<uint32_t> row_indices = row_indices_arr[index];
-      for (uint32_t r = 0; r < row_count; r++) {
-        uint32_t b = row_indices.at(r);
+  for (uint rep = 0; rep < hash_repeats; rep++) {
+    for (uint index = 0; index < num_inputs; index++) {
+      vector<uint> row_indices = row_indices_arr[index];
+      for (uint r = 0; r < row_count; r++) {
+        uint b = row_indices.at(r);
         rambo_array[rep * internal_hash_length + hashes[rep * num_inputs + index]]
             .push_back(r * blooms_per_row + b);
       }
@@ -100,45 +100,46 @@ void FLING::insert(int num_inputs, int* data_ids, float* data_vals, int* data_ma
 void FLING::finalize_construction() {
 
   // Remove duplicates
-  for (size_t i = 0; i < internal_hash_length * hash_repeats; i++) {
+  for (uint i = 0; i < internal_hash_length * hash_repeats; i++) {
     sort(rambo_array[i].begin(), rambo_array[i].end());
     rambo_array[i].erase(unique(rambo_array[i].begin(), rambo_array[i].end()),
                          rambo_array[i].end());
   }
 }
 
-void FLING::query(int* data_ids, float* data_vals, int* data_marker, size_t query_goal, uint32_t *query_output) {
-	unsigned int* hashes = new unsigned int[hash_repeats];
-	unsigned int* indices = new unsigned int[hash_repeats]; // Should be all one value
+void FLING::query(int* data_ids, float* data_vals, int* data_marker, uint query_goal, uint *query_output) {
+	uint* hashes = new unsigned int[hash_repeats];
+	uint* indices = new unsigned int[hash_repeats]; // Should be all one value
 
   hash_function->getHash(hashes, indices, data_ids, data_vals, data_marker, 1, 1);
 
-  // Get observations
-  vector<uint16_t> counts(num_bins, 0);
-  for (size_t rep = 0; rep < hash_repeats; ++rep) {
-    vector<uint32_t> to_add = rambo_array[internal_hash_length * rep + hashes[rep]];
-    for (uint32_t rambo_cell : to_add) {
+  // Get observations, ~35%
+  vector<uint> counts(num_bins, 0);
+  for (uint rep = 0; rep < hash_repeats; ++rep) {
+    for (uint rambo_cell : rambo_array[internal_hash_length * rep + hashes[rep]]) {
       ++counts[rambo_cell];
     }
   }
 
-  vector<uint32_t> sorted[hash_repeats + 1];
-  size_t size_guess = num_bins / (hash_repeats + 1);
-  for (vector<uint32_t> &v : sorted) {
+  // Populate sorted, ~25%
+  vector<uint> sorted[hash_repeats + 1];
+  uint size_guess = num_bins / (hash_repeats + 1);
+  for (vector<uint> &v : sorted) {
     v.reserve(size_guess);
   }
-  for (uint32_t i = 0; i < num_bins; ++i) {
-    sorted[counts[i]].push_back(i);
+  for (uint i = 0; i < num_bins; ++i) {
+    if (counts[i] != 0) {
+      sorted[counts[i]].push_back(i);
+    }
   }
 
-  // Determine the earliest goal_num_points that occur R times
-  vector<uint8_t> num_counts(num_points, 0); 
-  uint32_t threshhold = 0;
-  size_t num_found = 0;
-  // Determine the first goal_num_points that exceed count
-  for (int rep = hash_repeats; rep >= 0; --rep) {
-    for (uint32_t bin : sorted[rep]) {
-      for (uint32_t point : meta_rambo[bin]) {
+  // Determine the earliest goal_num_points that occur R times, ~30%
+  vector<uint> num_counts(num_points, 0); 
+  uint threshhold = 0;
+  uint num_found = 0;
+  for (uint rep = hash_repeats; rep > 0; --rep) {
+    for (uint bin : sorted[rep]) {
+      for (uint point : meta_rambo[bin]) {
          if (++num_counts[point] == row_count) {
           query_output[num_found] = point;
           if (++num_found == query_goal) {
@@ -146,6 +147,12 @@ void FLING::query(int* data_ids, float* data_vals, int* data_marker, size_t quer
           }
         }
       }
+    }
+  }
+
+  for (uint i = 0; num_found < query_goal; i++) {
+    if (num_counts[i] != row_count) {
+      query_output[num_found++] = i;
     }
   }
 }

@@ -146,24 +146,20 @@ void benchmark_sparse() {
 	unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
 	if (!USE_GROUPS) {
 		std::cout << "Using normal!" << std::endl;
-		for (size_t RANGE = 15; RANGE < 25; RANGE += 2) {
-			for (size_t REPS = 20; REPS <= 320; REPS *= 2) {
-				for (size_t RESERVOIR = 64; RESERVOIR <= 64 * 8; RESERVOIR *= 2) {
-					std::cout << "STATS_NORMAL: " << RESERVOIR << " " << RANGE << " " << REPS << std::endl;
-					do_normal(RESERVOIR, REPS, RANGE, sparse_indice, sparse_val, sparse_marker, gtruth_indice, gtruth_dist);
+			for (size_t REPS = 20; REPS <= 640; REPS *= 2) {
+				for (size_t RESERVOIR = 64; RESERVOIR <= 64 * 4; RESERVOIR *= 2) {
+					std::cout << "STATS_NORMAL: " << RESERVOIR << " " << 15 << " " << REPS << std::endl;
+					do_normal(RESERVOIR, REPS, 15, sparse_indice, sparse_val, sparse_marker, gtruth_indice, gtruth_dist);
 				}
 			}
-		}
 	}
 	else {
 		std::cout << "Using groups!" << std::endl;
-		for (size_t R = 3; R < 8; R += 2) {
-			for (size_t B = 5000; B <= 80000; B *= 2) {
-				for (size_t RANGE = 15; RANGE < 25; RANGE += 2) {
-					for (size_t REPS = 20; REPS <= 320; REPS *= 2) {
-						std::cout << "STATS_GROUPS: " << R << " " << B << " " << RANGE << " " << REPS << std::endl;
-						do_group(B, R, REPS, RANGE, sparse_indice, sparse_val, sparse_marker, gtruth_indice, gtruth_dist);
-					}
+		for (size_t R = 2; R < 8; R ++) {
+			for (size_t B = 625; B <= 80000; B *= 2) {
+				for (size_t REPS = 20; REPS <= 640; REPS *= 2) {
+					std::cout << "STATS_GROUPS: " << R << " " << B << " " << 15 << " " << REPS << std::endl;
+					do_group(B, R, REPS, 15, sparse_indice, sparse_val, sparse_marker, gtruth_indice, gtruth_dist);
 				}
 			}
 		}
