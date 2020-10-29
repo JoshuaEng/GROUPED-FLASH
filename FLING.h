@@ -24,6 +24,7 @@ private:
   std::vector<uint> *rambo_array; 
   std::vector<uint> *meta_rambo;
   LSH* hash_function;
+  uint *sorted;
 
 public:
   FLING(uint row_count, uint blooms_per_row, LSH* hash_function, uint hash_bits, 

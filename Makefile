@@ -12,7 +12,7 @@ COBJS := $(CSOURCES:%.c=$(COBJDIR)/%.o)
 
 OBJS = $(CPPOBJS) $(COBJS)
 
-OPT_FLAGS   := -O3 -fopenmp -march=native
+OPT_FLAGS   := -Ofast -fopenmp -march=native
 
 INC := /usr/include/
 

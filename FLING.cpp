@@ -128,14 +128,11 @@ void FLING::query(int* data_ids, float* data_vals, int* data_marker, uint query_
     v.reserve(size_guess);
   }
   for (uint i = 0; i < num_bins; ++i) {
-    if (counts[i] != 0) {
       sorted[counts[i]].push_back(i);
-    }
   }
 
   // Determine the earliest goal_num_points that occur R times, ~30%
-  vector<uint> num_counts(num_points, 0); 
-  uint threshhold = 0;
+  vector<uint8_t> num_counts(num_points, 0); 
   uint num_found = 0;
   for (uint rep = hash_repeats; rep > 0; --rep) {
     for (uint bin : sorted[rep]) {
@@ -150,6 +147,7 @@ void FLING::query(int* data_ids, float* data_vals, int* data_marker, uint query_
     }
   }
 
+  // Only get down here if not adding zeros, depending on the test
   for (uint i = 0; num_found < query_goal; i++) {
     if (num_counts[i] != row_count) {
       query_output[num_found++] = i;

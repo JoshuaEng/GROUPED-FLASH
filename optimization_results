@@ -1,0 +1,9 @@
+As test, basically check first few print outs in file
+Best so far is uint8count_counts.txt:
+2798ms, 3273ms, 4502ms, ...
+
+Results:
+checking for zero with an if statement in loop instead of adding: bad
+uint8 for count_counts array: good
+uint8 for counts array: bad
+big preallocated array instead of array of vectors: bad, probably (could try optimizing later)
