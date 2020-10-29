@@ -115,9 +115,11 @@ void FLING::query(int* data_ids, float* data_vals, int* data_marker, uint query_
 
   // Get observations, ~35%
   vector<uint> counts(num_bins, 0);
-  for (uint rep = 0; rep < hash_repeats; ++rep) {
-    for (uint rambo_cell : rambo_array[internal_hash_length * rep + hashes[rep]]) {
-      ++counts[rambo_cell];
+  for (uint rep = 0; rep < hash_repeats; rep++) {
+    const uint index = internal_hash_length * rep + hashes[rep];
+    const uint size = rambo_array[index].size();
+    for (uint small_index = 0; small_index < size; small_index++) {
+      counts[rambo_array[index][small_index]]++;
     }
   }
 
@@ -134,7 +136,7 @@ void FLING::query(int* data_ids, float* data_vals, int* data_marker, uint query_
   // Determine the earliest goal_num_points that occur R times, ~30%
   vector<uint8_t> num_counts(num_points, 0); 
   uint num_found = 0;
-  for (uint rep = hash_repeats; rep > 0; --rep) {
+  for (int rep = hash_repeats; rep >= 0; --rep) {
     for (uint bin : sorted[rep]) {
       for (uint point : meta_rambo[bin]) {
          if (++num_counts[point] == row_count) {
@@ -144,13 +146,6 @@ void FLING::query(int* data_ids, float* data_vals, int* data_marker, uint query_
           }
         }
       }
-    }
-  }
-
-  // Only get down here if not adding zeros, depending on the test
-  for (uint i = 0; num_found < query_goal; i++) {
-    if (num_counts[i] != row_count) {
-      query_output[num_found++] = i;
     }
   }
 }

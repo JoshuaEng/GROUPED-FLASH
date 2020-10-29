@@ -141,7 +141,6 @@ void benchmark_sparse() {
 	readSparse(BASEFILE, 0, (unsigned)(NUMBASE + NUMQUERY), sparse_indice, sparse_val, sparse_marker, (unsigned)((NUMBASE + NUMQUERY) * DIMENSION));
 	end = Clock::now();
 	etime_0 = (end - begin).count() / 1000000;
-	// std::cout << "Completed, used " << etime_0 << "ms. \n";
 
 	unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
 	if (!USE_GROUPS) {
