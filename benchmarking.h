@@ -6,7 +6,8 @@ Then modify the file location and parameters below in the Parameters section. */
 
 //#define SIFT1M
 //#define URL
-#define WEBSPAM_TRI
+// #define WEBSPAM_TRI
+#define GPLUS
 //#define KDD12
 #define USE_GROUPS true
 
@@ -29,8 +30,6 @@ Then modify the file location and parameters below in the Parameters section. */
 #define QUERYPROBES					1
 #define HASHINGPROBES				1
 
-#define DIMENSION					128
-#define FULL_DIMENSION				128
 #define NUMQUERY					10000
 #define NUMBASE						1000000
 #define MAX_RESERVOIR_RAND			100000
@@ -39,7 +38,6 @@ Then modify the file location and parameters below in the Parameters section. */
 #define TOPK						128
 
 #define BASEFILE		"../files/datasets/sift1m/sift_base.fvecs"
-#define QUERYFILE		"../files/datasets/sift1m/sift_query.fvecs"
 #define GTRUTHINDICE	"../files/datasets/sift1m/sift1m_gtruth_indices.txt"
 #define GTRUTHDIST		"../files/datasets/sift1m/sift1m_gtruth_distances.txt"
 
@@ -74,7 +72,6 @@ Then modify the file location and parameters below in the Parameters section. */
 #define TOPK						128
 
 #define BASEFILE		"../files/datasets/url/url_combined"
-#define QUERYFILE		"../files/datasets/url/url_combined"
 #define GTRUTHINDICE	"../files/datasets/url/url_gtruth_indices.txt"
 #define GTRUTHDIST		"../files/datasets/url/url_gtruth_distances.txt"
 
@@ -109,9 +106,36 @@ Then modify the file location and parameters below in the Parameters section. */
 #define TOPK						128
 
 #define BASEFILE		"../webspam_wc_normalized_trigram.svm"
-#define QUERYFILE		"./webspam_wc_normalized_trigram.svm"
 #define GTRUTHINDICE	"../webspam/webspam_tri_gtruth_indices.txt"
 #define GTRUTHDIST		"../webspam/webspam_tri_gtruth_distances.txt"
+
+#elif defined GPLUS
+
+
+#define NUMHASHBATCH				50
+#define BATCHPRINT					5
+
+#define K							4
+#define RANGE_POW					18
+#define RANGE_ROW_U					18
+
+#define NUMTABLES					200
+#define RESERVOIR_SIZE				64
+#define OCCUPANCY					1
+
+#define QUERYPROBES					1
+#define HASHINGPROBES				1
+
+#define NUMBASE						72270
+#define MAX_RESERVOIR_RAND			35000
+#define NUMQUERY					848
+#define TOPK						100
+#define AVAILABLE_TOPK				100
+
+#define BASEFILE		"../FLINNG/gplus-data.csv"
+#define QUERYFILE		"../FLINNG/gplus-queries.csv"
+#define GTRUTH          	"../FLINNG/gplus-gtruth.csv"
+
 
 #endif
 

@@ -337,3 +337,12 @@ void readGroundTruthFloat(const std::string& file, int numQueries, int available
 
 	myFile.close();
 }
+
+void readGroundTruthGraph(const std::string& file, uint **gtruth_indice, float **gtruth_dist) {
+	// TODO
+}
+
+void readSparseGraph(const std::string& file, int **sparse_indice, float **sparse_dist, int **sparse_marker) {
+	// TODO
+}
+
