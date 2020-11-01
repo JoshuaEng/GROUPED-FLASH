@@ -113,17 +113,16 @@ void FLING::query(int* data_ids, float* data_vals, int* data_marker, uint query_
 
   hash_function->getHash(hashes, indices, data_ids, data_vals, data_marker, 1, 1);
 
-  // Get observations, ~35%
+  // Get observations, ~80%!
   vector<uint> counts(num_bins, 0);
   for (uint rep = 0; rep < hash_repeats; rep++) {
     const uint index = internal_hash_length * rep + hashes[rep];
     const uint size = rambo_array[index].size();
     for (uint small_index = 0; small_index < size; small_index++) {
-      counts[rambo_array[index][small_index]]++;
-    }
+      // This single line takes 80% of the time, around half for the move and half for the add
+      ++counts[rambo_array[index][small_index]]; 
   }
 
-  // Populate sorted, ~25%
   vector<uint> sorted[hash_repeats + 1];
   uint size_guess = num_bins / (hash_repeats + 1);
   for (vector<uint> &v : sorted) {
@@ -133,7 +132,6 @@ void FLING::query(int* data_ids, float* data_vals, int* data_marker, uint query_
       sorted[counts[i]].push_back(i);
   }
 
-  // Determine the earliest goal_num_points that occur R times, ~30%
   vector<uint8_t> num_counts(num_points, 0); 
   uint num_found = 0;
   for (int rep = hash_repeats; rep >= 0; --rep) {

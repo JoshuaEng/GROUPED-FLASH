@@ -154,11 +154,11 @@ void benchmark_sparse() {
 	}
 	else {
 		std::cout << "Using groups!" << std::endl;
-		for (size_t R = 3; R < 8; R ++) {
-			for (size_t B = 5000; B <= 80000; B *= 2) {
+		for (size_t R = 3; R < 4; R ++) {
+			for (size_t B = 10000; B <= 40000; B *= 2) {
 				for (size_t REPS = 20; REPS <= 640; REPS *= 2) {
 					std::cout << "STATS_GROUPS: " << R << " " << B << " " << 15 << " " << REPS << std::endl;
-					do_group(B, R, REPS, 15, sparse_indice, sparse_val, sparse_marker, gtruth_indice, gtruth_dist);
+					do_group(B, R, REPS, 17, sparse_indice, sparse_val, sparse_marker, gtruth_indice, gtruth_dist);
 				}
 			}
 		}
