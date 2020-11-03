@@ -17,7 +17,7 @@
 
 using namespace std;
 
-vector<uint> FLING::get_hashed_row_indices(uint index) {
+vector<uint> *FLING::get_hashed_row_indices(uint index) {
   string key = to_string(index);
   uint key_length = to_string(index).size();
   vector<uint> *hashvals = new vector<uint>;
@@ -26,11 +26,11 @@ vector<uint> FLING::get_hashed_row_indices(uint index) {
     MurmurHash3_x86_32(key.c_str(), key_length, i, &op); // seed is row number
     hashvals->push_back(op % blooms_per_row);
   }
-  return *hashvals;
+  return hashvals;
 }
 
-FLING::FLING(uint row_count, uint blooms_per_row, LSH* hash_function, uint hash_bits, 
-  uint hash_repeats, uint num_points) {
+FLING::FLING(uint row_count, uint blooms_per_row, LSH *hash_function,
+             uint hash_bits, uint hash_repeats, uint num_points) {
 
   this->row_count = row_count;
   this->blooms_per_row = blooms_per_row;
@@ -44,14 +44,14 @@ FLING::FLING(uint row_count, uint blooms_per_row, LSH* hash_function, uint hash_
   this->points_added_so_far = 0;
   this->rambo_array = new vector<uint>[hash_repeats * internal_hash_length];
 
-
   // Create meta rambo
   meta_rambo = new vector<uint>[row_count * blooms_per_row];
   for (uint point = 0; point < num_points; point++) {
-    vector<uint> hashvals = FLING::get_hashed_row_indices(point);
+    vector<uint> *hashvals = FLING::get_hashed_row_indices(point);
     for (uint r = 0; r < row_count; r++) {
-      meta_rambo[hashvals[r] + blooms_per_row * r].push_back(point);
+      meta_rambo[(*hashvals)[r] + blooms_per_row * r].push_back(point);
     }
+    delete hashvals;
   }
 
   // Sort array entries in meta rambo
@@ -68,29 +68,38 @@ FLING::~FLING() {
 /**
  * Inserts a keys of a given index into the FLING array
  */
-void FLING::insert(int num_inputs, int* data_ids, float* data_vals, int* data_marker) {
-  unsigned int* hashes = new unsigned int[hash_repeats * num_inputs];
-	unsigned int* indices = new unsigned int[hash_repeats * num_inputs];
+void FLING::insert(int num_inputs, int *data_ids, float *data_vals,
+                   int *data_marker) {
+  unsigned int *hashes = new unsigned int[hash_repeats * num_inputs];
+  unsigned int *indices = new unsigned int[hash_repeats * num_inputs];
 
-	hash_function->getHash(hashes, indices, data_ids, data_vals, data_marker, num_inputs, 1);
+  hash_function->getHash(hashes, indices, data_ids, data_vals, data_marker,
+                         num_inputs, 1);
 
-  vector<uint> row_indices_arr[num_inputs];
-  for (uint i = 0; i < num_inputs; i++){
+  vector<uint> *row_indices_arr[num_inputs];
+  for (uint i = 0; i < num_inputs; i++) {
     row_indices_arr[i] = get_hashed_row_indices(i + points_added_so_far);
   }
 
   for (uint rep = 0; rep < hash_repeats; rep++) {
     for (uint index = 0; index < num_inputs; index++) {
-      vector<uint> row_indices = row_indices_arr[index];
+      vector<uint> *row_indices = row_indices_arr[index];
       for (uint r = 0; r < row_count; r++) {
-        uint b = row_indices.at(r);
-        rambo_array[rep * internal_hash_length + hashes[rep * num_inputs + index]]
+        uint b = row_indices->at(r);
+        rambo_array[rep * internal_hash_length +
+                    hashes[rep * num_inputs + index]]
             .push_back(r * blooms_per_row + b);
       }
     }
   }
 
   points_added_so_far += num_inputs;
+
+  for (uint i = 0; i < num_inputs; i++) {
+    delete row_indices_arr[i];
+  }
+  delete hashes;
+  delete indices;
 }
 
 /**
@@ -107,11 +116,13 @@ void FLING::finalize_construction() {
   }
 }
 
-void FLING::query(int* data_ids, float* data_vals, int* data_marker, uint query_goal, uint *query_output) {
-	uint* hashes = new unsigned int[hash_repeats];
-	uint* indices = new unsigned int[hash_repeats]; // Should be all one value
+void FLING::query(int *data_ids, float *data_vals, int *data_marker,
+                  uint query_goal, uint *query_output) {
+  uint hashes[hash_repeats];
+  uint indices[hash_repeats]; // Should be all one value
 
-  hash_function->getHash(hashes, indices, data_ids, data_vals, data_marker, 1, 1);
+  hash_function->getHash(hashes, indices, data_ids, data_vals, data_marker, 1,
+                         1);
 
   // Get observations, ~80%!
   vector<uint> counts(num_bins, 0);
@@ -119,8 +130,10 @@ void FLING::query(int* data_ids, float* data_vals, int* data_marker, uint query_
     const uint index = internal_hash_length * rep + hashes[rep];
     const uint size = rambo_array[index].size();
     for (uint small_index = 0; small_index < size; small_index++) {
-      // This single line takes 80% of the time, around half for the move and half for the add
-      ++counts[rambo_array[index][small_index]]; 
+      // This single line takes 80% of the time, around half for the move and
+      // half for the add
+      ++counts[rambo_array[index][small_index]];
+    }
   }
 
   vector<uint> sorted[hash_repeats + 1];
@@ -129,15 +142,15 @@ void FLING::query(int* data_ids, float* data_vals, int* data_marker, uint query_
     v.reserve(size_guess);
   }
   for (uint i = 0; i < num_bins; ++i) {
-      sorted[counts[i]].push_back(i);
+    sorted[counts[i]].push_back(i);
   }
 
-  vector<uint8_t> num_counts(num_points, 0); 
+  vector<uint8_t> num_counts(num_points, 0);
   uint num_found = 0;
   for (int rep = hash_repeats; rep >= 0; --rep) {
     for (uint bin : sorted[rep]) {
       for (uint point : meta_rambo[bin]) {
-         if (++num_counts[point] == row_count) {
+        if (++num_counts[point] == row_count) {
           query_output[num_found] = point;
           if (++num_found == query_goal) {
             return;

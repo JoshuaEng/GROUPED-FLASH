@@ -24,6 +24,16 @@ void do_group(size_t B, size_t R, size_t REPS, size_t RANGE, int *sparse_indice,
 
   unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
 
+  uint start_offset = 0;
+#ifdef QUERYFILE
+  int *query_indice;
+  float *query_val;
+  int *query_marker;
+  readGraphQueries(QUERYFILE, &query_indice, &query_val, &query_marker);
+#else
+  start_offset = NUMQUERY;
+#endif
+
   auto begin = Clock::now();
   auto end = Clock::now();
   float etime_0;
@@ -35,29 +45,19 @@ void do_group(size_t B, size_t R, size_t REPS, size_t RANGE, int *sparse_indice,
 
   // Populate index
   for (int b = 0; b < NUMHASHBATCH; b++) {
-#ifdef QUERYFILE
     fling->insert(hash_chunk, sparse_indice, sparse_val,
-                  sparse_marker + b * hash_chunk);
-#else
-    fling->insert(hash_chunk, sparse_indice, sparse_val,
-                  sparse_marker + b * hash_chunk + NUMQUERY);
-#endif
+                  sparse_marker + b * hash_chunk + start_offset);
   }
 
   fling->finalize_construction();
 
-#ifdef QUERYFILE
-	// TODO: Read in queries
-#endif
-
   // Do queries
-	std::cout << "Querying...\n";
+  std::cout << "Querying...\n";
   begin = Clock::now();
   for (int i = 0; i < NUMQUERY; i++) {
     uint32_t recall_buffer[TOPK];
 #ifdef QUERYFILE
-    // TODO: Change this to use read in queries
-		fling->query(sparse_indice, sparse_val, sparse_marker + i, TOPK,
+    fling->query(query_indice, query_val, query_marker + i, TOPK,
                  recall_buffer);
 #else
     fling->query(sparse_indice, sparse_val, sparse_marker + i, TOPK,
@@ -72,6 +72,12 @@ void do_group(size_t B, size_t R, size_t REPS, size_t RANGE, int *sparse_indice,
   std::cout << "Queried " << NUMQUERY << " datapoints, used " << etime_0
             << "ms. \n";
 
+#ifdef QUERYFILE
+  delete[] query_indice;
+  delete[] query_marker;
+  delete[] query_val;
+#endif
+
   /* Quality evaluations. */
   const int nCnt = 10;
   int nList[nCnt] = {1, 10, 20, 30, 32, 40, 50, 64, 100, TOPK};
@@ -79,9 +85,15 @@ void do_group(size_t B, size_t R, size_t REPS, size_t RANGE, int *sparse_indice,
   float gstdVec[gstdCnt] = {0.95, 0.90, 0.85, 0.80, 0.75, 0.70, 0.65, 0.50};
   const int tstdCnt = 10;
   int tstdVec[tstdCnt] = {1, 10, 20, 30, 32, 40, 50, 64, 100, TOPK};
-  similarityMetric(sparse_indice, sparse_val, sparse_marker, sparse_indice,
-                   sparse_val, sparse_marker + NUMQUERY, queryOutputs,
-                   gtruth_dist, NUMQUERY, TOPK, AVAILABLE_TOPK, nList, nCnt);
+  if (!similarityMetric(sparse_indice, sparse_val, sparse_marker, sparse_indice,
+                        sparse_val, sparse_marker + start_offset, queryOutputs,
+                        gtruth_dist, NUMQUERY, TOPK, AVAILABLE_TOPK, nList,
+                        nCnt, NUMBASE)) {
+    delete hashFamily;
+    delete fling;
+    delete queryOutputs;
+    return;
+  }
   similarityOfData(gtruth_dist, NUMQUERY, TOPK, AVAILABLE_TOPK, nList, nCnt);
   evaluate(queryOutputs, NUMQUERY, TOPK, gtruth_indice, gtruth_dist,
            AVAILABLE_TOPK, gstdVec, gstdCnt, tstdVec, tstdCnt, nList,
@@ -98,6 +110,16 @@ void do_normal(size_t RESERVOIR, size_t REPS, size_t RANGE, int *sparse_indice,
 
   unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
 
+  uint start_offset = 0;
+#ifdef QUERYFILE
+  int *query_indice;
+  float *query_val;
+  int *query_marker;
+  readGraphQueries(QUERYFILE, &query_indice, &query_val, &query_marker);
+#else
+  start_offset = NUMQUERY;
+#endif
+
   auto begin = Clock::now();
   auto end = Clock::now();
   float etime_0;
@@ -112,17 +134,28 @@ void do_normal(size_t RESERVOIR, size_t REPS, size_t RANGE, int *sparse_indice,
   int hash_chunk = NUMBASE / NUMHASHBATCH;
   for (int b = 0; b < NUMHASHBATCH; b++) {
     myReservoir->add(hash_chunk, sparse_indice, sparse_val,
-                     sparse_marker + b * hash_chunk + NUMQUERY);
+                     sparse_marker + b * hash_chunk + start_offset);
   }
 
   std::cout << "Querying...\n";
   begin = Clock::now();
+#ifdef QUERYFILE
+  myReservoir->ann(NUMQUERY, query_indice, query_val, query_marker,
+                   queryOutputs, TOPK);
+#else
   myReservoir->ann(NUMQUERY, sparse_indice, sparse_val, sparse_marker,
                    queryOutputs, TOPK);
+#endif
   end = Clock::now();
   etime_0 = (end - begin).count() / 1000000;
   std::cout << "Queried " << NUMQUERY << " datapoints, used " << etime_0
             << "ms. \n";
+
+#ifdef QUERYFILE
+  delete[] query_indice;
+  delete[] query_marker;
+  delete[] query_val;
+#endif
 
   /* Quality evaluations. */
   const int nCnt = 10;
@@ -131,9 +164,15 @@ void do_normal(size_t RESERVOIR, size_t REPS, size_t RANGE, int *sparse_indice,
   float gstdVec[gstdCnt] = {0.95, 0.90, 0.85, 0.80, 0.75, 0.70, 0.65, 0.50};
   const int tstdCnt = 10;
   int tstdVec[tstdCnt] = {1, 10, 20, 30, 32, 40, 50, 64, 100, TOPK};
-  similarityMetric(sparse_indice, sparse_val, sparse_marker, sparse_indice,
-                   sparse_val, sparse_marker + NUMQUERY, queryOutputs,
-                   gtruth_dist, NUMQUERY, TOPK, AVAILABLE_TOPK, nList, nCnt);
+  if (!similarityMetric(sparse_indice, sparse_val, sparse_marker, sparse_indice,
+                        sparse_val, sparse_marker + start_offset, queryOutputs,
+                        gtruth_dist, NUMQUERY, TOPK, AVAILABLE_TOPK, nList,
+                        nCnt, NUMBASE)) {
+    delete hashFamily;
+    delete queryOutputs;
+    delete myReservoir;
+    return;
+  }
   similarityOfData(gtruth_dist, NUMQUERY, TOPK, AVAILABLE_TOPK, nList, nCnt);
   evaluate(queryOutputs, NUMQUERY, TOPK, gtruth_indice, gtruth_dist,
            AVAILABLE_TOPK, gstdVec, gstdCnt, tstdVec, tstdCnt, nList,
@@ -166,12 +205,11 @@ void benchmark_sparse() {
 #else
   unsigned int *gtruth_indice;
   float *gtruth_dist;
-  readGroundTruthGraph(GTRUTH, &gtruth_indice, &gtruth_dist);
-
   int *sparse_indice;
   float *sparse_val;
   int *sparse_marker;
-  readSparseGraph(BASEFILE, &sparse_indice, &sparse_val, &sparse_marker);
+  readGraph(GTRUTH, &gtruth_indice, &gtruth_dist, BASEFILE, &sparse_indice,
+            &sparse_val, &sparse_marker);
 #endif
   end = Clock::now();
   etime_0 = (end - begin).count() / 1000000;
@@ -179,23 +217,31 @@ void benchmark_sparse() {
   unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
   if (!USE_GROUPS) {
     std::cout << "Using normal!" << std::endl;
-    for (size_t REPS = 20; REPS <= 640; REPS *= 2) {
-      for (size_t RESERVOIR = 64; RESERVOIR <= 64 * 4; RESERVOIR *= 2) {
-        std::cout << "STATS_NORMAL: " << RESERVOIR << " " << 15 << " " << REPS
-                  << std::endl;
-        do_normal(RESERVOIR, REPS, 15, sparse_indice, sparse_val, sparse_marker,
-                  gtruth_indice, gtruth_dist);
+    for (size_t REPS = 20; REPS <= 320; REPS *= 2) {
+      for (size_t RESERVOIR = 4; RESERVOIR <= 128; RESERVOIR *= 1.5) {
+        for (size_t RANGE = 14; RANGE <= 19; RANGE++) {
+          if (((1 << RANGE) * REPS * RESERVOIR) < (1 << 30)) {
+            std::cout << "STATS_NORMAL: " << RESERVOIR << " " << RANGE << " "
+                      << REPS << std::endl;
+            do_normal(RESERVOIR, REPS, RANGE, sparse_indice, sparse_val,
+                      sparse_marker, gtruth_indice, gtruth_dist);
+          }
+        }
       }
     }
   } else {
     std::cout << "Using groups!" << std::endl;
-    for (size_t R = 3; R < 4; R++) {
-      for (size_t B = 10000; B <= 40000; B *= 2) {
-        for (size_t REPS = 20; REPS <= 640; REPS *= 2) {
-          std::cout << "STATS_GROUPS: " << R << " " << B << " " << 15 << " "
-                    << REPS << std::endl;
-          do_group(B, R, REPS, 17, sparse_indice, sparse_val, sparse_marker,
-                   gtruth_indice, gtruth_dist);
+    for (size_t R = 3; R < 10; R++) {
+      for (size_t B = 1000; B <= 8000; B *= 2) {
+        for (size_t REPS = 20; REPS <= 320; REPS *= 2) {
+          for (size_t RANGE = 14; RANGE <= 19; RANGE++) {
+            if (R * REPS < 1000) {
+              std::cout << "STATS_GROUPS: " << R << " " << B << " " << RANGE
+                        << " " << REPS << std::endl;
+              do_group(B, R, REPS, RANGE, sparse_indice, sparse_val,
+                       sparse_marker, gtruth_indice, gtruth_dist);
+            }
+          }
         }
       }
     }

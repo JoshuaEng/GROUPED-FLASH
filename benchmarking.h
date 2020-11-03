@@ -9,7 +9,7 @@ Then modify the file location and parameters below in the Parameters section. */
 // #define WEBSPAM_TRI
 #define GPLUS
 //#define KDD12
-#define USE_GROUPS true
+#define USE_GROUPS false
 
 /* Parameters. */
 
@@ -111,6 +111,7 @@ Then modify the file location and parameters below in the Parameters section. */
 
 #elif defined GPLUS
 
+#define SPARSE_DATASET
 
 #define NUMHASHBATCH				50
 #define BATCHPRINT					5
@@ -119,22 +120,21 @@ Then modify the file location and parameters below in the Parameters section. */
 #define RANGE_POW					18
 #define RANGE_ROW_U					18
 
-#define NUMTABLES					200
-#define RESERVOIR_SIZE				64
+#define RESERVOIR_SIZE				16
 #define OCCUPANCY					1
 
 #define QUERYPROBES					1
 #define HASHINGPROBES				1
 
-#define NUMBASE						72270
-#define MAX_RESERVOIR_RAND			35000
+#define NUMBASE						72271
+#define MAX_RESERVOIR_RAND			        35000
 #define NUMQUERY					848
 #define TOPK						100
-#define AVAILABLE_TOPK				100
+#define AVAILABLE_TOPK				        100
 
-#define BASEFILE		"../FLINNG/gplus-data.csv"
-#define QUERYFILE		"../FLINNG/gplus-queries.csv"
-#define GTRUTH          	"../FLINNG/gplus-gtruth.csv"
+#define BASEFILE		"../FLINNG/data/gplus-data.csv"
+#define QUERYFILE		"../FLINNG/data/gplus-queries.csv"
+#define GTRUTH          	"../FLINNG/data/gplus-gtruth.csv"
 
 
 #endif

@@ -15,5 +15,5 @@ void bvecs_read(const std::string& file, int offset, int readsize, float *out);
 void readGroundTruthInt(const std::string& file, int numQueries, int availableTopK, unsigned int *out);
 void readGroundTruthFloat(const std::string& file, int numQueries, int availableTopK, float *out);
 
-void readGroundTruthGraph(const std::string& file, uint **gtruth_indice, float **gtruth_dist);
-void readSparseGraph(const std::string& file, int **sparse_indice, float **sparse_dist, int **sparse_marker);
+void readGraph(const std::string& data_file, uint **gtruth_indice, float **gtruth_dist, const std::string& gtruth_file, int **sparse_indice, float **sparse_dist, int **sparse_marker);
+void readGraphQueries(const std::string &query_file_name, int **sparse_indice, float **sparse_dist, int **sparse_marker);

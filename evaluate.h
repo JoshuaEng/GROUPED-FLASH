@@ -15,10 +15,10 @@ void similarityMetric(float *queries, float *bases, unsigned int *queryOutputs, 
 	unsigned int dimension, unsigned int numQueries, unsigned int topk, unsigned int availableTopk, int *nList,
 	int nCnt);
 
-void similarityMetric(int *queries_indice, float *queries_val, int *queries_marker,
+bool similarityMetric(int *queries_indice, float *queries_val, int *queries_marker,
 	int *bases_indice, float *bases_val, int *bases_marker, unsigned int *queryOutputs, float *groundTruthDist,
 	unsigned int numQueries, unsigned int topk, unsigned int availableTopk, int *nList,
-	int nCnt);
+	int nCnt, unsigned int numPoints);
 
 void evaluate(
 	unsigned int *queryOutputs,		// The output indices of queries.

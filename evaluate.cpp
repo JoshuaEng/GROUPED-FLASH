@@ -56,10 +56,10 @@ void similarityOfData(float *groundTruthDist, unsigned int numQueries, unsigned 
 }
 
 /* Simple comparison of average similarity between gtruth and the outputs. */
-void similarityMetric(int *queries_indice, float *queries_val, int *queries_marker,
+bool similarityMetric(int *queries_indice, float *queries_val, int *queries_marker,
 	int *bases_indice, float *bases_val, int *bases_marker, unsigned int *queryOutputs, float *groundTruthDist,
 	unsigned int numQueries, unsigned int topk, unsigned int availableTopk, int *nList,
-	int nCnt) {
+	int nCnt, unsigned int numPoints) {
 
 	float *gtruth_avg = new float[nCnt]();
 	float *out_avt = new float[nCnt]();
@@ -81,6 +81,10 @@ void similarityMetric(int *queries_indice, float *queries_val, int *queries_mark
 		startA = queries_marker[i];
 		endA = queries_marker[i + 1];
 		for (unsigned int j = 0; j < topk; j++) {
+			if (queryOutputs[i * topk + j] > numPoints) {
+				cout << "FLASH did not return enough result" << endl;
+				return false;
+			}
 			int startB, endB;
 			startB = bases_marker[queryOutputs[i * topk + j]];
 			endB = bases_marker[queryOutputs[i * topk + j] + 1];
@@ -105,6 +109,8 @@ void similarityMetric(int *queries_indice, float *queries_val, int *queries_mark
 	printf("\n");
 	for (unsigned int n = 0; n < nCnt; n++) printf("%1.3f ", gtruth_avg[n] / (numQueries * nList[n]));
 	printf("\n"); printf("\n");
+
+	return true;
 
 }
 
