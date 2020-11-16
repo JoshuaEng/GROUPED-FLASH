@@ -20,21 +20,20 @@ private:
   uint internal_hash_length;
   uint internal_hash_bits;
   uint hash_size;
-  uint points_added_so_far;
   std::vector<uint> *rambo_array;
   std::vector<uint> *meta_rambo;
-  LSH *hash_function;
+  uint *hashes;
+  uint num_hashes_generated;
   uint *sorted;
+  LSH* hash_function;
 
 public:
-  FLING(uint row_count, uint blooms_per_row, LSH *hash_function, uint hash_bits,
+  FLING(uint row_count, uint blooms_per_row, uint *hashes, uint num_hashes_generated, LSH* hash_function, uint hash_bits,
         uint hash_repeats, uint num_points);
   ~FLING();
 
-  void insert(int num_inputs, int *data_ids, float *data_vals,
-              int *data_marker);
-  void query(int *data_ids, float *data_vals, int *data_marker, uint query_goal,
-             uint *query_output);
+  void do_inserts();
+  void query(uint* query_hashes, uint i, uint TOPK, uint32_t* recall_buffer);
   void finalize_construction();
   uint get_hash_index(uint i);
 };

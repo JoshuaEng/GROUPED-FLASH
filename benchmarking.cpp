@@ -18,52 +18,28 @@
 #include <string>
 #include <vector>
 
-void do_group(size_t B, size_t R, size_t REPS, size_t RANGE, int *sparse_indice,
-              float *sparse_val, int *sparse_marker,
-              unsigned int *gtruth_indice, float *gtruth_dist) {
+void do_group(size_t B, size_t R, size_t REPS, size_t RANGE, uint* hashes, uint max_reps,
+              unsigned int *gtruth_indice, float *gtruth_dist,  uint* query_hashes, 
+              int *query_sparse_indice, float *query_sparse_val, int *query_sparse_marker) {
 
   unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
 
-  uint start_offset = 0;
-#ifdef QUERYFILE
-  int *query_indice;
-  float *query_val;
-  int *query_marker;
-  readGraphQueries(QUERYFILE, &query_indice, &query_val, &query_marker);
-#else
-  start_offset = NUMQUERY;
-#endif
 
   auto begin = Clock::now();
   auto end = Clock::now();
   float etime_0;
 
   // Create index
-  LSH *hashFamily = new LSH(2, K, REPS, RANGE); // Initialize LSH hash.
-  FLING *fling = new FLING(R, B, hashFamily, RANGE, REPS, NUMBASE);
-  int hash_chunk = NUMBASE / NUMHASHBATCH;
-
-  // Populate index
-  for (int b = 0; b < NUMHASHBATCH; b++) {
-    cout << "Hash batch " << b << endl;
-    fling->insert(hash_chunk, sparse_indice, sparse_val,
-                  sparse_marker + b * hash_chunk + start_offset);
-  }
-
+  LSH *hash_family = new LSH(2, K, REPS, RANGE); // Initialize LSH hash.
+  FLING *fling = new FLING(R, B, hashes, max_reps, hash_family, RANGE, REPS, NUMBASE);
   fling->finalize_construction();
 
   // Do queries
   std::cout << "Querying...\n";
   begin = Clock::now();
-  for (int i = 0; i < NUMQUERY; i++) {
+  for (uint i = 0; i < NUMQUERY; i++) {
     uint32_t recall_buffer[TOPK];
-#ifdef QUERYFILE
-    fling->query(query_indice, query_val, query_marker + i, TOPK,
-                 recall_buffer);
-#else
-    fling->query(sparse_indice, sparse_val, sparse_marker + i, TOPK,
-                 recall_buffer);
-#endif
+    fling->query(query_hashes, i, TOPK, recall_buffer);
     for (size_t j = 0; j < TOPK; j++) {
       queryOutputs[TOPK * i + j] = recall_buffer[j];
     }
@@ -86,21 +62,22 @@ void do_group(size_t B, size_t R, size_t REPS, size_t RANGE, int *sparse_indice,
   float gstdVec[gstdCnt] = {0.95, 0.90, 0.85, 0.80, 0.75, 0.70, 0.65, 0.50};
   const int tstdCnt = 10;
   int tstdVec[tstdCnt] = {1, 10, 20, 30, 32, 40, 50, 64, 100, TOPK};
-  if (!similarityMetric(sparse_indice, sparse_val, sparse_marker, sparse_indice,
-                        sparse_val, sparse_marker + start_offset, queryOutputs,
+
+  // TODO: Fix this for graphs
+  if (!similarityMetric(query_sparse_indice, query_sparse_val, query_sparse_marker, query_sparse_indice,
+                        query_sparse_val, query_sparse_marker + NUMQUERY, queryOutputs,
                         gtruth_dist, NUMQUERY, TOPK, AVAILABLE_TOPK, nList,
                         nCnt, NUMBASE)) {
-    delete hashFamily;
     delete fling;
     delete queryOutputs;
     return;
   }
+
   similarityOfData(gtruth_dist, NUMQUERY, TOPK, AVAILABLE_TOPK, nList, nCnt);
   evaluate(queryOutputs, NUMQUERY, TOPK, gtruth_indice, gtruth_dist,
            AVAILABLE_TOPK, gstdVec, gstdCnt, tstdVec, tstdCnt, nList,
            nCnt); // The number of n interested.
 
-  delete hashFamily;
   delete fling;
   delete queryOutputs;
 }
@@ -215,19 +192,47 @@ void benchmark_sparse() {
   end = Clock::now();
   etime_0 = (end - begin).count() / 1000000;
 
+  // Generate hashes with maximum reps
+  cout << "Starting total hash generation" << endl;
+  auto RANGE = 17;
+  auto MAX_REPS = 3100;
+  LSH *hashFamily = new LSH(2, K, MAX_REPS, RANGE); // Initialize LSH hash.
+  uint offset = 0;
+  uint start_offset = 0;
+
+#ifdef QUERYFILE
+  int *query_sparse_indice;
+  float *query_val;
+  int *query_marker;
+  readGraphQueries(QUERYFILE, &query_indice, &query_val, &query_marker);
+#else
+  start_offset = NUMQUERY;
+#endif
+
+  unsigned int *hashes = new unsigned int[MAX_REPS * (NUMBASE - start_offset)];
+  unsigned int *indices = new unsigned int[MAX_REPS * (NUMBASE - start_offset)];
+  hashFamily->getHash(hashes, indices, sparse_indice, sparse_val, sparse_marker + start_offset, NUMBASE - start_offset, 1);
+
+  unsigned int *query_hashes = new unsigned int[MAX_REPS * NUMQUERY];
+  unsigned int *query_indices = new unsigned int[MAX_REPS * NUMQUERY];
+ #ifdef QUERYFILE
+  hashFamily->getHash(query_hashes, query_indices, query_sparse_indice, query_val, query_marker, NUMQUERY, 1);
+#else
+  hashFamily->getHash(query_hashes, query_indices, sparse_indice, sparse_val, sparse_marker, NUMQUERY, 1);
+#endif
+
+  cout << "Starting index building and query grid parameter test" << endl;
   unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
   if (!USE_GROUPS) {
     std::cout << "Using normal!" << std::endl;
     for (size_t REPS = 20; REPS <= 3050; REPS *= 1.5) {
       for (size_t RESERVOIR = 4; RESERVOIR <= 2000; RESERVOIR *= 1.5) {
-        for (size_t RANGE = 17; RANGE <= 17; RANGE++) {
           // if (((1 << RANGE) * REPS * RESERVOIR) < (1 << 30)) {
             std::cout << "STATS_NORMAL: " << RESERVOIR << " " << RANGE << " "
                       << REPS << std::endl;
             do_normal(RESERVOIR, REPS, RANGE, sparse_indice, sparse_val,
                       sparse_marker, gtruth_indice, gtruth_dist);
           // }
-        }
       }
     }
   } else {
@@ -235,12 +240,13 @@ void benchmark_sparse() {
     for (size_t REPS = 20; REPS <= 2560; REPS *= 2) {
       for (size_t R = 2; R < 6; R++) {
         for (size_t B = 2500; B <= 80000; B *= 2) {
-          for (size_t RANGE = 17; RANGE <= 17; RANGE++) {
             std::cout << "STATS_GROUPS: " << R << " " << B << " " << RANGE
                       << " " << REPS << std::endl;
-            do_group(B, R, REPS, RANGE, sparse_indice, sparse_val,
-                      sparse_marker, gtruth_indice, gtruth_dist);
-          }
+#ifdef QUERYFILE
+            do_group(B, R, REPS, RANGE, hashes, MAX_REPS, gtruth_indice, gtruth_dist, query_hashes, query_indices, query_sparse_indice, query_sparse_val, query_sparse_marker);
+#else
+            do_group(B, R, REPS, RANGE, hashes, MAX_REPS, gtruth_indice, gtruth_dist, query_hashes, sparse_indice, sparse_val, sparse_marker);
+#endif 
         }
       }
     }
