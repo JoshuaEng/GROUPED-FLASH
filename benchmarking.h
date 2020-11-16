@@ -5,11 +5,12 @@
 Then modify the file location and parameters below in the Parameters section. */
 
 //#define SIFT1M
-//#define URL
-// #define WEBSPAM_TRI
-#define GPLUS
-//#define KDD12
-#define USE_GROUPS false
+// #define URL
+#define WEBSPAM_TRI
+// #define GPLUS
+// #define FRIENDSTER
+// #define KDD12
+#define USE_GROUPS true
 
 /* Parameters. */
 
@@ -71,9 +72,9 @@ Then modify the file location and parameters below in the Parameters section. */
 #define AVAILABLE_TOPK				1024
 #define TOPK						128
 
-#define BASEFILE		"../files/datasets/url/url_combined"
-#define GTRUTHINDICE	"../files/datasets/url/url_gtruth_indices.txt"
-#define GTRUTHDIST		"../files/datasets/url/url_gtruth_distances.txt"
+#define BASEFILE		"../url/url_combined"
+#define GTRUTHINDICE	"../CalculateGroundTruth/url_gtruth_indices3.txt"
+#define GTRUTHDIST		"../CalculateGroundTruth/url_gtruth_distances.txt"
 
 #elif defined WEBSPAM_TRI
 
@@ -112,29 +113,49 @@ Then modify the file location and parameters below in the Parameters section. */
 #elif defined GPLUS
 
 #define SPARSE_DATASET
+#define GRAPHDATASET
 
 #define NUMHASHBATCH				50
 #define BATCHPRINT					5
 
 #define K							4
-#define RANGE_POW					18
-#define RANGE_ROW_U					18
-
-#define RESERVOIR_SIZE				16
-#define OCCUPANCY					1
 
 #define QUERYPROBES					1
 #define HASHINGPROBES				1
+#define OCCUPANCY					1
 
 #define NUMBASE						72271
-#define MAX_RESERVOIR_RAND			        35000
 #define NUMQUERY					848
 #define TOPK						100
 #define AVAILABLE_TOPK				        100
 
-#define BASEFILE		"../FLINNG/data/gplus-data.csv"
-#define QUERYFILE		"../FLINNG/data/gplus-queries.csv"
-#define GTRUTH          	"../FLINNG/data/gplus-gtruth.csv"
+#define BASEFILE		"../CalculateGroundTruth/gplus-data.csv"
+#define QUERYFILE		"../CalculateGroundTruth/gplus-queries.csv"
+#define GTRUTH          	"../CalculateGroundTruth/gplus-gtruth.csv"
+
+#elif defined FRIENDSTER
+
+#define SPARSE_DATASET
+#define GRAPHDATASET
+
+#define NUMHASHBATCH				500
+#define BATCHPRINT					5
+
+#define K							4
+
+#define QUERYPROBES					1
+#define HASHINGPROBES				1
+#define OCCUPANCY					1
+
+
+#define NUMBASE						65608366
+#define NUMQUERY					3736
+#define TOPK						100
+#define AVAILABLE_TOPK				        100
+
+#define BASEFILE		"../brc7/friendster-data.csv"
+#define QUERYFILE		"../CalculateGroundTruth/friendster-queries.csv"
+#define GTRUTH          	"../CalculateGroundTruth/friendster-gtruth.csv"
 
 
 #endif

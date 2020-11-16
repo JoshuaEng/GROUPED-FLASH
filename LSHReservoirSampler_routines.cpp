@@ -25,7 +25,7 @@ void LSHReservoirSampler::kSelect(unsigned int *tally, unsigned int *outputs, in
 	}
 
 	// Reduction.
-	unsigned int *tallyCnt = new unsigned int[segmentSize * numQueryEntries]();
+	unsigned int *tallyCnt = new unsigned int[(size_t)(segmentSize) * (size_t)(numQueryEntries)]();
 
 #if !defined SINGLETHREAD_COUNTING
 // #pragma omp parallel for

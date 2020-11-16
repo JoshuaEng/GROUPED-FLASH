@@ -45,6 +45,7 @@ void do_group(size_t B, size_t R, size_t REPS, size_t RANGE, int *sparse_indice,
 
   // Populate index
   for (int b = 0; b < NUMHASHBATCH; b++) {
+    cout << "Hash batch " << b << endl;
     fling->insert(hash_chunk, sparse_indice, sparse_val,
                   sparse_marker + b * hash_chunk + start_offset);
   }
@@ -137,7 +138,7 @@ void do_normal(size_t RESERVOIR, size_t REPS, size_t RANGE, int *sparse_indice,
                      sparse_marker + b * hash_chunk + start_offset);
   }
 
-  std::cout << "Querying...\n";
+  std::cout << "Querying..." << endl;
   begin = Clock::now();
 #ifdef QUERYFILE
   myReservoir->ann(NUMQUERY, query_indice, query_val, query_marker,
@@ -149,7 +150,7 @@ void do_normal(size_t RESERVOIR, size_t REPS, size_t RANGE, int *sparse_indice,
   end = Clock::now();
   etime_0 = (end - begin).count() / 1000000;
   std::cout << "Queried " << NUMQUERY << " datapoints, used " << etime_0
-            << "ms. \n";
+            << "ms." << endl;
 
 #ifdef QUERYFILE
   delete[] query_indice;
@@ -190,7 +191,7 @@ void benchmark_sparse() {
 
   std::cout << "Reading groundtruth and data ... " << std::endl;
   begin = Clock::now();
-#ifndef GPLUS
+#ifndef GRAPHDATASET
   unsigned int *gtruth_indice = new unsigned int[NUMQUERY * AVAILABLE_TOPK];
   float *gtruth_dist = new float[NUMQUERY * AVAILABLE_TOPK];
   readGroundTruthInt(GTRUTHINDICE, NUMQUERY, AVAILABLE_TOPK, gtruth_indice);
@@ -217,30 +218,28 @@ void benchmark_sparse() {
   unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
   if (!USE_GROUPS) {
     std::cout << "Using normal!" << std::endl;
-    for (size_t REPS = 20; REPS <= 320; REPS *= 2) {
-      for (size_t RESERVOIR = 4; RESERVOIR <= 128; RESERVOIR *= 1.5) {
-        for (size_t RANGE = 14; RANGE <= 19; RANGE++) {
-          if (((1 << RANGE) * REPS * RESERVOIR) < (1 << 30)) {
+    for (size_t REPS = 20; REPS <= 3050; REPS *= 1.5) {
+      for (size_t RESERVOIR = 4; RESERVOIR <= 2000; RESERVOIR *= 1.5) {
+        for (size_t RANGE = 17; RANGE <= 17; RANGE++) {
+          // if (((1 << RANGE) * REPS * RESERVOIR) < (1 << 30)) {
             std::cout << "STATS_NORMAL: " << RESERVOIR << " " << RANGE << " "
                       << REPS << std::endl;
             do_normal(RESERVOIR, REPS, RANGE, sparse_indice, sparse_val,
                       sparse_marker, gtruth_indice, gtruth_dist);
-          }
+          // }
         }
       }
     }
   } else {
     std::cout << "Using groups!" << std::endl;
-    for (size_t R = 3; R < 10; R++) {
-      for (size_t B = 1000; B <= 8000; B *= 2) {
-        for (size_t REPS = 20; REPS <= 320; REPS *= 2) {
-          for (size_t RANGE = 14; RANGE <= 19; RANGE++) {
-            if (R * REPS < 1000) {
-              std::cout << "STATS_GROUPS: " << R << " " << B << " " << RANGE
-                        << " " << REPS << std::endl;
-              do_group(B, R, REPS, RANGE, sparse_indice, sparse_val,
-                       sparse_marker, gtruth_indice, gtruth_dist);
-            }
+    for (size_t REPS = 20; REPS <= 2560; REPS *= 2) {
+      for (size_t R = 2; R < 6; R++) {
+        for (size_t B = 2500; B <= 80000; B *= 2) {
+          for (size_t RANGE = 17; RANGE <= 17; RANGE++) {
+            std::cout << "STATS_GROUPS: " << R << " " << B << " " << RANGE
+                      << " " << REPS << std::endl;
+            do_group(B, R, REPS, RANGE, sparse_indice, sparse_val,
+                      sparse_marker, gtruth_indice, gtruth_dist);
           }
         }
       }

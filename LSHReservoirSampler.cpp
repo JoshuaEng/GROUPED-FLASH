@@ -48,12 +48,12 @@ void LSHReservoirSampler::ann(int numQueryEntries, int* dataIdx, float* dataVal,
 
 	unsigned int* allprobsHash = new unsigned int[_numTables * numQueryEntries * _queryProbes];
 	unsigned int* allprobsIdx = new unsigned int[_numTables * numQueryEntries * _queryProbes];
-	int segmentSize = _numTables * _queryProbes * _reservoirSize;
+	size_t segmentSize = (size_t)_numTables * (size_t)_queryProbes * (size_t)_reservoirSize;
 
 	_hashFamily->getHash(allprobsHash, allprobsIdx,
 		dataIdx, dataVal, dataMarker, numQueryEntries, _queryProbes);
 
-	unsigned int* tally = new unsigned int[numQueryEntries * segmentSize];
+	unsigned int* tally = new unsigned int[(size_t)(numQueryEntries) * segmentSize];
 
 	query_extractRows_cpu_openmp(numQueryEntries, segmentSize, tally, allprobsHash);
 
