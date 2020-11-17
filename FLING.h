@@ -20,7 +20,7 @@ private:
   uint internal_hash_length;
   uint internal_hash_bits;
   uint hash_size;
-  std::vector<uint> *rambo_array;
+  std::vector<uint16_t> *rambo_array;
   std::vector<uint> *meta_rambo;
   uint *hashes;
   uint num_hashes_generated;
@@ -33,7 +33,7 @@ public:
   ~FLING();
 
   void do_inserts();
-  void query(uint* query_hashes, uint i, uint TOPK, uint32_t* recall_buffer);
+  void query(uint* query_hashes, uint num_queries, uint i, uint TOPK, uint32_t* recall_buffer);
   void finalize_construction();
   uint get_hash_index(uint i);
 };

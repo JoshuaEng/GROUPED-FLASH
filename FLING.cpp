@@ -42,7 +42,7 @@ FLING::FLING(uint row_count, uint blooms_per_row, uint *hashes, uint num_hashes_
   this->num_hashes_generated = num_hashes_generated;
   this->internal_hash_bits = hash_bits;
   this->internal_hash_length = 1 << internal_hash_bits;
-  this->rambo_array = new vector<uint>[hash_repeats * internal_hash_length];
+  this->rambo_array = new vector<uint16_t>[hash_repeats * internal_hash_length];
   this->hash_function = hash_family;
 
   // Create meta rambo
@@ -109,17 +109,17 @@ void FLING::finalize_construction() {
   }
 }
 
-void FLING::query(uint* query_hashes, uint point_index, uint query_goal, uint32_t* query_output) {
-  uint hashes[hash_repeats];
+void FLING::query(uint* query_hashes, uint num_queries, uint point_index, uint query_goal, uint32_t* query_output) {
+  uint hash_representation[hash_repeats];
   for (int i = 0; i < hash_repeats; i++) {
-    hashes[i] = query_hashes[num_points * i + point_index];
+    hash_representation[i] = query_hashes[num_queries * i + point_index];
   }
 
 
   // Get observations, ~80%!
   vector<uint> counts(num_bins, 0);
   for (uint rep = 0; rep < hash_repeats; rep++) {
-    const uint index = internal_hash_length * rep + hashes[rep];
+    const uint index = internal_hash_length * rep + hash_representation[rep];
     const uint size = rambo_array[index].size();
     for (uint small_index = 0; small_index < size; small_index++) {
       // This single line takes 80% of the time, around half for the move and
