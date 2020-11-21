@@ -33,7 +33,7 @@ public:
   ~FLING();
 
   void do_inserts();
-  void query(uint* query_hashes, uint num_queries, uint i, uint TOPK, uint32_t* recall_buffer);
+  void query(int *data_ids, float *data_vals, int *data_marker, uint query_goal, uint *query_output);  
   void finalize_construction();
   uint get_hash_index(uint i);
 };

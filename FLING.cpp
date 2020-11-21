@@ -109,17 +109,18 @@ void FLING::finalize_construction() {
   }
 }
 
-void FLING::query(uint* query_hashes, uint num_queries, uint point_index, uint query_goal, uint32_t* query_output) {
-  uint hash_representation[hash_repeats];
-  for (int i = 0; i < hash_repeats; i++) {
-    hash_representation[i] = query_hashes[num_queries * i + point_index];
-  }
+void FLING::query(int *data_ids, float *data_vals, int *data_marker,
+                  uint query_goal, uint *query_output) {
+  uint hashes[hash_repeats];
+  uint indices[hash_repeats]; // Should be all one value
 
+  hash_function->getHash(hashes, indices, data_ids, data_vals, data_marker, 1,
+                         1);
 
   // Get observations, ~80%!
   vector<uint> counts(num_bins, 0);
   for (uint rep = 0; rep < hash_repeats; rep++) {
-    const uint index = internal_hash_length * rep + hash_representation[rep];
+    const uint index = internal_hash_length * rep + hashes[rep];
     const uint size = rambo_array[index].size();
     for (uint small_index = 0; small_index < size; small_index++) {
       // This single line takes 80% of the time, around half for the move and

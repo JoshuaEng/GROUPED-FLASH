@@ -1,25 +1,11 @@
 #include "LSHReservoirSampler.h"
 #include "misc.h"
 
-void LSHReservoirSampler::add(int numInputEntries, int* dataIdx, float* dataVal, int* dataMarker) {
+void LSHReservoirSampler::add(int numInputEntries, unsigned int* allprobsHash, unsigned int* allprobsIdx) {
 
 	const int numProbePerTb = numInputEntries * _hashingProbes;
 
-	if ((unsigned) numInputEntries > _maxSamples) {
-		printf("[LSHReservoirSampler::add] Input length %d is too large! \n", numInputEntries);
-		pause();
-		return;
-	}
-
-	unsigned int* allprobsHash = new unsigned int[_numTables * numInputEntries * _hashingProbes];
-	unsigned int* allprobsIdx = new unsigned int[_numTables * numInputEntries * _hashingProbes];
-
-	_hashFamily->getHash(allprobsHash, allprobsIdx, dataIdx, dataVal, dataMarker, numInputEntries, _hashingProbes);
-
 	HashAddCPUTB(allprobsHash, allprobsIdx, numProbePerTb, numInputEntries);
-
-	delete[] allprobsHash;
-	delete[] allprobsIdx;
 
 	_sequentialIDCounter_kernel += numInputEntries;
 }

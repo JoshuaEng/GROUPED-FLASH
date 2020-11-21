@@ -115,7 +115,7 @@ public:
 	@param dataMarker Marks the start index of each vector in dataIdx and dataVal.
 		Have an additional marker at the end to mark the (end+1) index.
 	*/
-	void add(int numInputEntries, int* dataIdx, float* dataVal, int* dataMarker);
+	void add(int numInputEntries, unsigned int* allprobsHash, unsigned int* allprobsIdx);
 
 	/** Query vectors (in sparse format) and return top k neighbors for each.
 	Near-neighbors for each query will be returned in descending similarity.
