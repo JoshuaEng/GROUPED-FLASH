@@ -153,7 +153,7 @@ Then modify the file location and parameters below in the Parameters section. */
 #define TOPK						100
 #define AVAILABLE_TOPK				        100
 
-#define BASEFILE		"../brc7/friendster-data.csv"
+#define BASEFILE		"../../brc7/friendster-data.csv"
 #define QUERYFILE		"../CalculateGroundTruth/friendster-queries.csv"
 #define GTRUTH          	"../CalculateGroundTruth/friendster-gtruth.csv"
 

@@ -359,6 +359,10 @@ void readGraphQueries(const std::string &query_file_name, int **sparse_indice,
     }
     query_file.close();
   }
+  else {
+    cerr << "Could not open query file" << endl;
+    exit(1);
+  }
   *sparse_indice = new int[array_length];
   *sparse_dist = new float[array_length];
   *sparse_marker = new int[NUMQUERY + 1];
@@ -391,6 +395,10 @@ void readGraph(const std::string &gtruth_file_name, uint **gtruth_indice,
       array_length += row.size();
     }
     data_file.close();
+  }
+  else {
+    cerr << "Could not open data file" << endl;
+    exit(1);
   }
   *sparse_indice = new int[array_length];
   *sparse_dist = new float[array_length];
@@ -429,6 +437,10 @@ void readGraph(const std::string &gtruth_file_name, uint **gtruth_indice,
       getline(gtruth_file, line);
     }
     gtruth_file.close();
+  }
+  else {
+    cerr << "Could not open ground truth file" << endl;
+    exit(1);
   }
 
   cout << "Done reading" << endl;
