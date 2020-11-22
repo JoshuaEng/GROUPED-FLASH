@@ -75,7 +75,11 @@ import math
 plt.scatter([y for (x,y, z) in group_record if y > lower_bound], [math.log10(10000 / x * 1000) for (x,y, z) in group_record if y > lower_bound], marker='x', label=f'FLINNG' )
 plt.scatter([y for (x,y, z) in normal_record if x != 0  and y > lower_bound], [math.log10(10000 / x * 1000) for (x,y, z) in normal_record if x != 0  and y > lower_bound], marker='s', label='FLASH')
 
+<<<<<<< HEAD
 if show_size:
+=======
+if show_size
+>>>>>>> 39c454eaa96b16c68f6c0926a70b5d9db5a78419
         for record in normal_record:
                 if (record[1] > lower_bound):
                         label, reservoire_size, hash_range, reps = record[2].split()
