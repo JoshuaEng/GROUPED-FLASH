@@ -28,8 +28,6 @@ void do_group(size_t B, size_t R, size_t REPS, size_t RANGE, uint *hashes,
   offset = NUMQUERY;
 #endif
 
-
-
   unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
 
   auto begin = Clock::now();
@@ -212,17 +210,6 @@ void benchmark_sparse() {
                           sparse_marker + start_offset, NUMBASE - start_offset,
                           1);
 
-      std::cout << "Initializing query hashes, array size " << REPS * NUMQUERY << endl;
-      unsigned int *query_hashes = new unsigned int[REPS * NUMQUERY];
-      unsigned int *query_indices = new unsigned int[REPS * NUMQUERY];
-#ifdef QUERYFILE
-      hashFamily->getHash(query_hashes, query_indices, query_sparse_indice,
-                          query_val, query_marker, NUMQUERY, 1);
-#else
-      hashFamily->getHash(query_hashes, query_indices, sparse_indice,
-                          sparse_val, sparse_marker, NUMQUERY, 1);
-#endif
-
       for (size_t RESERVOIR = 6; RESERVOIR <= 2000; RESERVOIR *= 1.5) {
         // if (((1 << RANGE) * REPS * RESERVOIR) < (1 << 30)) {
         std::cout << "STATS_NORMAL: " << RESERVOIR << " " << RANGE << " "
@@ -238,6 +225,10 @@ void benchmark_sparse() {
 #endif
         // }
       }
+
+      delete[] hashes;
+      delete[] indices;
+      delete hashFamily;
     }
   } else {
     std::cout << "Using groups!" << std::endl;
@@ -254,18 +245,9 @@ void benchmark_sparse() {
                           1);
 
       std::cout << "Initializing query hashes, array size " << REPS * NUMQUERY << endl;
-      unsigned int *query_hashes = new unsigned int[REPS * NUMQUERY];
-      unsigned int *query_indices = new unsigned int[REPS * NUMQUERY];
-#ifdef QUERYFILE
-      hashFamily->getHash(query_hashes, query_indices, query_sparse_indice,
-                          query_val, query_marker, NUMQUERY, 1);
-#else
-      hashFamily->getHash(query_hashes, query_indices, sparse_indice,
-                          sparse_val, sparse_marker, NUMQUERY, 1);
-#endif
 
       for (size_t R = 2; R < 6; R++) {
-        for (size_t B = 2500; B * R <= 1 << 16; B *= 2) {
+        for (size_t B = 2000; B * R <= 1 << 16; B *= 2) {
           std::cout << "STATS_GROUPS: " << R << " " << B << " " << RANGE << " "
                     << REPS << std::endl;
 #ifdef QUERYFILE
@@ -282,8 +264,6 @@ void benchmark_sparse() {
     
     delete[] hashes;
     delete[] indices;
-    delete[] query_hashes;
-    delete[] query_indices;
     delete hashFamily;
     }
   }

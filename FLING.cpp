@@ -73,16 +73,16 @@ FLING::~FLING() {
  */
 void FLING::do_inserts() {
 
-  vector<uint> *row_indices_arr[num_points];
+  vector<vector<uint>> *row_indices_arr = new vector<vector<uint>>(num_points);
   for (uint i = 0; i < num_points; i++) {
-    row_indices_arr[i] = get_hashed_row_indices(i);
+    row_indices_arr->at(i) = *get_hashed_row_indices(i);
   }
 
   for (uint rep = 0; rep < hash_repeats; rep++) {
     for (uint index = 0; index < num_points; index++) {
-      vector<uint> *row_indices = row_indices_arr[index];
+      vector<uint> row_indices = row_indices_arr->at(index);
       for (uint r = 0; r < row_count; r++) {
-        uint b = row_indices->at(r);
+        uint b = row_indices.at(r);
         rambo_array[rep * internal_hash_length +
                     hashes[rep * num_points + index]]
             .push_back(r * blooms_per_row + b);
@@ -90,9 +90,8 @@ void FLING::do_inserts() {
     }
   }
 
-  for (uint i = 0; i < num_points; i++) {
-    delete row_indices_arr[i];
-  }
+  row_indices_arr->clear();
+  delete row_indices_arr;
 }
 
 /**

@@ -5,12 +5,12 @@
 Then modify the file location and parameters below in the Parameters section. */
 
 //#define SIFT1M
-// #define URL
-#define WEBSPAM_TRI
+#define URL
+// #define WEBSPAM_TRI
 // #define GPLUS
 // #define FRIENDSTER
 // #define KDD12
-#define USE_GROUPS false
+#define USE_GROUPS true
 
 /* Parameters. */
 
