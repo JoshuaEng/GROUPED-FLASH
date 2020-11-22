@@ -63,6 +63,7 @@ void do_group(size_t B, size_t R, size_t REPS, size_t RANGE, uint *hashes,
   int tstdVec[tstdCnt] = {1, 10, 20, 30, 32, 40, 50, 64, 100, TOPK};
 
   // TODO: Fix this for graphs
+#ifndef QUERYFILE
   if (!similarityMetric(query_sparse_indice, query_sparse_val,
                         query_sparse_marker, query_sparse_indice,
                         query_sparse_val, query_sparse_marker + NUMQUERY,
@@ -72,6 +73,7 @@ void do_group(size_t B, size_t R, size_t REPS, size_t RANGE, uint *hashes,
     delete queryOutputs;
     return;
   }
+#endif
 
   similarityOfData(gtruth_dist, NUMQUERY, TOPK, AVAILABLE_TOPK, nList, nCnt);
   evaluate(queryOutputs, NUMQUERY, TOPK, gtruth_indice, gtruth_dist,
@@ -125,6 +127,7 @@ void do_normal(size_t RESERVOIR, size_t REPS, size_t RANGE, uint *hashes, uint *
   const int tstdCnt = 10;
   int tstdVec[tstdCnt] = {1, 10, 20, 30, 32, 40, 50, 64, 100, TOPK};
 
+#ifndef QUERYFILE
   // TODO: Fix this for graphs
   if (!similarityMetric(query_sparse_indice, query_sparse_val,
                         query_sparse_marker, query_sparse_indice,
@@ -135,6 +138,7 @@ void do_normal(size_t RESERVOIR, size_t REPS, size_t RANGE, uint *hashes, uint *
     delete queryOutputs;
     return;
   }
+#endif
 
   similarityOfData(gtruth_dist, NUMQUERY, TOPK, AVAILABLE_TOPK, nList, nCnt);
   evaluate(queryOutputs, NUMQUERY, TOPK, gtruth_indice, gtruth_dist,
@@ -181,9 +185,9 @@ void benchmark_sparse() {
   int *query_sparse_indice;
   float *query_val;
   int *query_marker;
-  readGraphQueries(QUERYFILE, &query_indice, &query_val, &query_marker);
+  readGraphQueries(QUERYFILE, &query_sparse_indice, &query_val, &query_marker);
   
-  start_offset = 0;
+  uint start_offset = 0;
 
 #endif
 
@@ -215,9 +219,9 @@ void benchmark_sparse() {
         std::cout << "STATS_NORMAL: " << RESERVOIR << " " << RANGE << " "
                   << REPS << std::endl;
 #ifdef QUERYFILE
-          do_normal(RESERVOIR, REPS, RANGE, hashes, MAX_REPS, gtruth_indice,
-                   gtruth_dist, query_indices, query_sparse_indice, query_sparse_val, 
-                   query_sparse_marker, hashFamily);
+          do_normal(RESERVOIR, REPS, RANGE, hashes, indices, REPS, gtruth_indice,
+                   gtruth_dist, query_sparse_indice, query_val, 
+                   query_marker, hashFamily);
 #else
           do_normal(RESERVOIR, REPS, RANGE, hashes, indices, REPS, gtruth_indice,
                    gtruth_dist, sparse_indice, sparse_val,
@@ -251,9 +255,9 @@ void benchmark_sparse() {
           std::cout << "STATS_GROUPS: " << R << " " << B << " " << RANGE << " "
                     << REPS << std::endl;
 #ifdef QUERYFILE
-          do_group(B, R, REPS, RANGE, hashes, MAX_REPS, gtruth_indice,
-                   gtruth_dist, query_hashes, query_indices,
-                   query_sparse_indice, query_sparse_val, query_sparse_marker);
+          do_group(B, R, REPS, RANGE, hashes, REPS, gtruth_indice,
+                   gtruth_dist,  query_sparse_indice, query_val, 
+                   query_marker, hashFamily);
 #else
           do_group(B, R, REPS, RANGE, hashes, REPS, gtruth_indice,
                    gtruth_dist, sparse_indice, sparse_val,
