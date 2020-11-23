@@ -78,6 +78,7 @@ void FLING::do_inserts() {
     row_indices_arr->at(i) = *get_hashed_row_indices(i);
   }
 
+#pragma omp parallel for
   for (uint rep = 0; rep < hash_repeats; rep++) {
     for (uint index = 0; index < num_points; index++) {
       vector<uint> row_indices = row_indices_arr->at(index);
@@ -101,6 +102,7 @@ void FLING::do_inserts() {
 void FLING::finalize_construction() {
 
   // Remove duplicates
+#pragma omp parallel for
   for (uint i = 0; i < internal_hash_length * hash_repeats; i++) {
     sort(rambo_array[i].begin(), rambo_array[i].end());
     rambo_array[i].erase(unique(rambo_array[i].begin(), rambo_array[i].end()),

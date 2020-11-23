@@ -10,7 +10,7 @@ void LSH::getOptimalMinhash(unsigned int *hashIndices, unsigned int *probeDataId
 #endif
 
 #ifndef DEBUG
-// #pragma omp parallel for
+#pragma omp parallel for
 #endif
 	for (int inputIdx = 0; inputIdx < numInputEntries; inputIdx++) {
 #if defined DEBUG
