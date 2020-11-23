@@ -35,19 +35,27 @@ void do_group(size_t B, size_t R, size_t REPS, size_t RANGE, uint *hashes,
   float etime_0;
 
   // Create index
+  std::cout << "Creating index...\n";
+  begin = Clock::now();
   FLING *fling =
       new FLING(R, B, hashes, max_reps, hash_family, RANGE, REPS, NUMBASE - offset);
   fling->finalize_construction();
+  end = Clock::now();
+  etime_0 = (end - begin).count() / 1000000;
+  std::cout << "Created index, used " << etime_0 << "ms. \n";
 
   // Do queries
   std::cout << "Querying...\n";
   begin = Clock::now();
   for (uint i = 0; i < NUMQUERY; i++) {
+    // std::cout << "For query " << i << ": \n"; 
     uint32_t recall_buffer[TOPK];
     fling->query(query_sparse_indice, query_sparse_val, query_sparse_marker + i, TOPK, recall_buffer);
     for (size_t j = 0; j < TOPK; j++) {
+      // std::cout << recall_buffer[j] << " ";
       queryOutputs[TOPK * i + j] = recall_buffer[j];
     }
+    // std::cout << "\n";
   }
   end = Clock::now();
   etime_0 = (end - begin).count() / 1000000;
@@ -150,6 +158,9 @@ void do_normal(size_t RESERVOIR, size_t REPS, size_t RANGE, uint *hashes, uint *
 }
 
 void benchmark_sparse() {
+
+  omp_set_num_threads(40);
+
   float etime_0, etime_1, etime_2;
   auto begin = Clock::now();
   auto end = Clock::now();
@@ -196,13 +207,14 @@ void benchmark_sparse() {
 
   // Generate hashes with maximum reps
   cout << "Starting total hash generation" << endl;
-  auto RANGE = 17;
+  auto RANGE = 19;
 
   cout << "Starting index building and query grid parameter test" << endl;
   unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
   if (!USE_GROUPS) {
     std::cout << "Using normal!" << std::endl;
-    for (size_t REPS = 30; REPS <= 3050; REPS *= 1.5) {
+    // for (size_t REPS = 30; REPS <= 3050; REPS *= 1.5) {
+    for (size_t REPS = 505; REPS <= 3050; REPS *= 1.5) {
 
       std::cout << "Initializing data hashes, array size " << REPS * (NUMBASE - start_offset) << endl;
       LSH *hashFamily = new LSH(2, K, REPS, RANGE); // Initialize LSH hash.
@@ -236,7 +248,7 @@ void benchmark_sparse() {
     }
   } else {
     std::cout << "Using groups!" << std::endl;
-    for (size_t REPS = 20; REPS <= 2560; REPS *= 2) {
+    for (size_t REPS = 80; REPS <= 2560; REPS *= 2) {
 
       std::cout << "Initializing data hashes, array size " << REPS * (NUMBASE - start_offset) << endl;
       LSH *hashFamily = new LSH(2, K, REPS, RANGE); // Initialize LSH hash.
@@ -248,9 +260,7 @@ void benchmark_sparse() {
                           sparse_marker + start_offset, NUMBASE - start_offset,
                           1);
 
-      std::cout << "Initializing query hashes, array size " << REPS * NUMQUERY << endl;
-
-      for (size_t R = 2; R < 6; R++) {
+      for (size_t R = 2; R < 4; R++) {
         for (size_t B = 2000; B * R <= 1 << 16; B *= 2) {
           std::cout << "STATS_GROUPS: " << R << " " << B << " " << RANGE << " "
                     << REPS << std::endl;
