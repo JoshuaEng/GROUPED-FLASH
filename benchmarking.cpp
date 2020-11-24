@@ -155,7 +155,6 @@ void benchmark_sparse() {
   auto end = Clock::now();
 
   std::cout << "Reading groundtruth and data ... " << std::endl;
-  begin = Clock::now();
 
 // Read in data
 #ifndef GRAPHDATASET
@@ -191,91 +190,55 @@ void benchmark_sparse() {
 
 #endif
 
-  end = Clock::now();
-  etime_0 = (end - begin).count() / 1000000;
-
-  // Generate hashes with maximum reps
-  cout << "Starting total hash generation" << endl;
-  auto RANGE = 17;
-
-  cout << "Starting index building and query grid parameter test" << endl;
-  unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
-  if (!USE_GROUPS) {
-    std::cout << "Using normal!" << std::endl;
-    for (size_t REPS = 30; REPS <= 3050; REPS *= 1.5) {
-
-      std::cout << "Initializing data hashes, array size " << REPS * (NUMBASE - start_offset) << endl;
-      LSH *hashFamily = new LSH(2, K, REPS, RANGE); // Initialize LSH hash.
-      unsigned int *hashes =
-          new unsigned int[REPS * (NUMBASE - start_offset)];
-      unsigned int *indices =
-          new unsigned int[REPS * (NUMBASE - start_offset)];
-      hashFamily->getHash(hashes, indices, sparse_indice, sparse_val,
-                          sparse_marker + start_offset, NUMBASE - start_offset,
-                          1);
-
-      for (size_t RESERVOIR = 6; RESERVOIR <= 2000; RESERVOIR *= 1.5) {
-        // if (((1 << RANGE) * REPS * RESERVOIR) < (1 << 30)) {
-        std::cout << "STATS_NORMAL: " << RESERVOIR << " " << RANGE << " "
-                  << REPS << std::endl;
-#ifdef QUERYFILE
-          do_normal(RESERVOIR, REPS, RANGE, hashes, indices, REPS, gtruth_indice,
-                   gtruth_dist, query_sparse_indice, query_val, 
-                   query_marker, hashFamily);
-#else
-          do_normal(RESERVOIR, REPS, RANGE, hashes, indices, REPS, gtruth_indice,
-                   gtruth_dist, sparse_indice, sparse_val,
-                   sparse_marker, hashFamily);
-#endif
-        // }
-      }
-
-      delete[] hashes;
-      delete[] indices;
-      delete hashFamily;
-    }
-  } else {
-    std::cout << "Using groups!" << std::endl;
-    for (size_t REPS = 20; REPS <= 2560; REPS *= 2) {
-
-      std::cout << "Initializing data hashes, array size " << REPS * (NUMBASE - start_offset) << endl;
-      LSH *hashFamily = new LSH(2, K, REPS, RANGE); // Initialize LSH hash.
-      unsigned int *hashes =
-          new unsigned int[REPS * (NUMBASE - start_offset)];
-      unsigned int *indices =
-          new unsigned int[REPS * (NUMBASE - start_offset)];
-      hashFamily->getHash(hashes, indices, sparse_indice, sparse_val,
-                          sparse_marker + start_offset, NUMBASE - start_offset,
-                          1);
-
-      std::cout << "Initializing query hashes, array size " << REPS * NUMQUERY << endl;
-
-      for (size_t R = 2; R < 6; R++) {
-        for (size_t B = 2000; B * R <= 1 << 16; B *= 2) {
-          std::cout << "STATS_GROUPS: " << R << " " << B << " " << RANGE << " "
-                    << REPS << std::endl;
-#ifdef QUERYFILE
-          do_group(B, R, REPS, RANGE, hashes, REPS, gtruth_indice,
-                   gtruth_dist,  query_sparse_indice, query_val, 
-                   query_marker, hashFamily);
-#else
-          do_group(B, R, REPS, RANGE, hashes, REPS, gtruth_indice,
-                   gtruth_dist, sparse_indice, sparse_val,
-                   sparse_marker, hashFamily);
-#endif
-        }
-      }
-    
-    delete[] hashes;
-    delete[] indices;
-    delete hashFamily;
-    }
+  auto sizes = new uint[NUMBASE];
+  for (uint i = 0; i < NUMBASE; i++) {
+    sizes[i] = sparse_marker[i + 1] - sparse_marker[i];
   }
 
-  delete[] sparse_indice;
-  delete[] sparse_val;
-  delete[] sparse_marker;
-  delete[] gtruth_indice;
-  delete[] gtruth_dist;
-  delete[] queryOutputs;
+  cout << "Starting query" << endl;
+  begin = Clock::now();
+  for (uint i = 0; i < NUMQUERY; i++) {
+    uint start = query_marker[i];
+    uint end = query_marker[i + 1];
+    uint size = end - start;
+    vector<uint> all_points(0);
+    for (uint j = start; j < end; j++) {
+      uint graph_start = sparse_marker[query_sparse_indice[j]];
+      uint graph_end = sparse_marker[query_sparse_indice[j] + 1];
+      for (uint k = graph_start; k < graph_end; k++) {
+        all_points.push_back(sparse_indice[k]);
+      }
+    }
+    sort(all_points.begin(), all_points.end());
+
+    vector<pair<float, uint>> pairs(0);
+    uint current = all_points[0];
+    uint current_count = 0;
+    for (uint observation : all_points) {
+      if (observation == current) {
+        current_count++;
+      }
+      else {
+        pairs.push_back(pair<float, uint>(current_count / (float)(size + sizes[current] - current_count), current));
+        current_count = 1;
+        current = observation;
+      }
+    }
+    sort(pairs.begin(), pairs.end());
+
+    // Comment this out if you want to test speed as the printing takes a bit
+    // cout << i << ": ";
+    // for (int j = pairs.size() - 1; j >= 0; j--) {
+    //   cout << pairs[j].second << " ";
+    // }
+    // cout << "\n";
+    // cout << i << ": ";
+    // for (int j = pairs.size() - 1; j >= 0; j--) {
+    //   cout << pairs[j].first << " ";
+    // }
+    // cout << "\n";
+  }
+
+  end = Clock::now();
+  cout <<  "Took: " << (end - begin).count() / 1000000 << endl;
 }

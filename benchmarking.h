@@ -7,8 +7,8 @@ Then modify the file location and parameters below in the Parameters section. */
 //#define SIFT1M
 // #define URL
 // #define WEBSPAM_TRI
-#define GPLUS
-// #define FRIENDSTER
+// #define GPLUS
+#define FRIENDSTER
 // #define KDD12
 #define USE_GROUPS true
 
@@ -153,7 +153,7 @@ Then modify the file location and parameters below in the Parameters section. */
 #define TOPK						100
 #define AVAILABLE_TOPK				        100
 
-#define BASEFILE		"../../brc7/friendster-data.csv"
+#define BASEFILE		"../../brc7/com-friendster.ungraph.csv"
 #define QUERYFILE		"../CalculateGroundTruth/friendster-queries.csv"
 #define GTRUTH          	"../CalculateGroundTruth/friendster-gtruth.csv"
 
