@@ -138,13 +138,13 @@ Then modify the file location and parameters below in the Parameters section. */
 #define SPARSE_DATASET
 #define GRAPHDATASET
 
-#define NUMHASHBATCH				500
+#define NUMHASHBATCH				        500
 #define BATCHPRINT					5
 
-#define K							4
+#define K						2
 
 #define QUERYPROBES					1
-#define HASHINGPROBES				1
+#define HASHINGPROBES				        1
 #define OCCUPANCY					1
 
 
