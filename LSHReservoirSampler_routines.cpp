@@ -10,7 +10,7 @@
 
 void LSHReservoirSampler::HashAddCPUTB(unsigned int *allprobsHash, unsigned int* allprobsIdx, int numProbePerTb, int numInputEntries) {
 
-	unsigned int* storelog = new unsigned int[_numTables * 4 * numProbePerTb]();
+	unsigned int* storelog = new unsigned int[(size_t)(_numTables * 4) * (size_t)(numProbePerTb)]();
 
 	reservoir_sampling_cpu_openmp(allprobsHash, allprobsIdx, storelog, numProbePerTb);
 	add_table_cpu_openmp(storelog, numProbePerTb);

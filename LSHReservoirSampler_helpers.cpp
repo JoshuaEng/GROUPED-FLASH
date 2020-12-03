@@ -12,7 +12,7 @@ void LSHReservoirSampler::reservoir_sampling_cpu_openmp(unsigned int *allprobsHa
 
 	unsigned int counter, allocIdx, reservoirRandNum, TB, hashIdx, inputIdx, ct, reservoir_full, location;
 
-// #pragma omp parallel for private(TB, hashIdx, inputIdx, ct, allocIdx, counter, reservoir_full, reservoirRandNum, location)
+#pragma omp parallel for private(TB, hashIdx, inputIdx, ct, allocIdx, counter, reservoir_full, reservoirRandNum, location)
 	for (int probeIdx = 0; probeIdx < numProbePerTb; probeIdx++) {
 		for (unsigned int tb = 0; tb < _numTables; tb++) {
 

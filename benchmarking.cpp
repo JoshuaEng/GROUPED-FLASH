@@ -108,7 +108,13 @@ void do_normal(size_t RESERVOIR, size_t REPS, size_t RANGE, uint *hashes, uint *
       OCCUPANCY); // Initialize hashtables and other datastructures.
 
 
-  myReservoir->add(NUMBASE - start_offset, hashes, indices);
+
+  for (uint start = 0; start < NUMBASE - start_offset;) {
+    uint end = min(start + (NUMBASE - start_offset) / NUMHASHBATCH, NUMBASE - start_offset);
+    myReservoir->add(end - start, hashes + start, indices + start);
+    start = end;
+  }
+  
 
   std::cout << "Querying..." << endl;
   begin = Clock::now();
@@ -150,6 +156,9 @@ void do_normal(size_t RESERVOIR, size_t REPS, size_t RANGE, uint *hashes, uint *
 }
 
 void benchmark_sparse() {
+
+  omp_set_num_threads(20);
+
   float etime_0, etime_1, etime_2;
   auto begin = Clock::now();
   auto end = Clock::now();
@@ -202,7 +211,7 @@ void benchmark_sparse() {
   unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
   if (!USE_GROUPS) {
     std::cout << "Using normal!" << std::endl;
-    for (size_t REPS = 30; REPS <= 3050; REPS *= 1.5) {
+    for (size_t REPS = 505; REPS <= 3050; REPS *= 1.5) {
 
       std::cout << "Initializing data hashes, array size " << REPS * (NUMBASE - start_offset) << endl;
       LSH *hashFamily = new LSH(2, K, REPS, RANGE); // Initialize LSH hash.
