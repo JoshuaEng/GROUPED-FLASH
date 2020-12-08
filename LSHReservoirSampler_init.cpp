@@ -99,9 +99,6 @@ void LSHReservoirSampler::initHelper(int numTablesIn, int numHashPerFamilyIn, in
 		omp_init_lock(_tableCountersLock + i);
 	}
 	std::cout << "Completed. " << std::endl;
-
-	/* Hashing counter. */
-	_sequentialIDCounter_kernel = 0;
 }
 
 LSHReservoirSampler::~LSHReservoirSampler() {

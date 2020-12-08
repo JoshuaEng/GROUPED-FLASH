@@ -1,13 +1,12 @@
 #include "LSHReservoirSampler.h"
 #include "misc.h"
+#include <functional>
 
-void LSHReservoirSampler::add(int numInputEntries, unsigned int* allprobsHash, unsigned int* allprobsIdx) {
+void LSHReservoirSampler::add(int numInputEntries, unsigned int* allprobsHash, unsigned int* allprobsIdx,  std::function<size_t(size_t, size_t)> indexFunc) {
 
 	const int numProbePerTb = numInputEntries * _hashingProbes;
 
-	HashAddCPUTB(allprobsHash, allprobsIdx, numProbePerTb, numInputEntries);
-
-	_sequentialIDCounter_kernel += numInputEntries;
+	HashAddCPUTB(allprobsHash, allprobsIdx, numProbePerTb, numInputEntries, indexFunc);
 }
 
 void LSHReservoirSampler::lossy_ann(int numQueryEntries, int* dataIdx, float* dataVal, int* dataMarker, unsigned int* outputs, int k) {

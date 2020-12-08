@@ -2,17 +2,18 @@
 #include "misc.h"
 #include "indexing.h"
 
+#include <functional>
 #include <algorithm>
 
 #define NAIVE_COUNTING
 //#define SINGLETHREAD_COUNTING
 //#define PRINT_TOPK
 
-void LSHReservoirSampler::HashAddCPUTB(unsigned int *allprobsHash, unsigned int* allprobsIdx, int numProbePerTb, int numInputEntries) {
+void LSHReservoirSampler::HashAddCPUTB(unsigned int *allprobsHash, unsigned int* allprobsIdx, int numProbePerTb, int numInputEntries,   std::function<size_t(size_t, size_t)> indexFunc) {
 
 	unsigned int* storelog = new unsigned int[(size_t)(_numTables * 4) * (size_t)(numProbePerTb)]();
 
-	reservoir_sampling_cpu_openmp(allprobsHash, allprobsIdx, storelog, numProbePerTb);
+	reservoir_sampling_cpu_openmp(allprobsHash, allprobsIdx, storelog, numProbePerTb, indexFunc);
 	add_table_cpu_openmp(storelog, numProbePerTb);
 	delete[] storelog;
 }

@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <inttypes.h>
 #include <math.h>
+#include <functional>
 
 #include "omp.h"
 #include "LSH.h"
@@ -46,7 +47,7 @@ private:
 	omp_lock_t* _tableCountersLock;
 
 	unsigned int *_global_rand;
-	unsigned int _numReservoirs, _sequentialIDCounter_kernel, _numReservoirsHashed, _aggNumReservoirs;
+	unsigned int _numReservoirs, _numReservoirsHashed, _aggNumReservoirs;
 	unsigned long long _tableMemMax, _tableMemReservoirMax, _tablePointerMax;
 	float _zerof;
 	unsigned int _sechash_a, _sechash_b, _tableNull, _zero;
@@ -59,13 +60,13 @@ private:
 	void unInit();
 
 	/* Buildingblocks. */
-	void reservoir_sampling_cpu_openmp(unsigned int *allprobsHash, unsigned int *allprobsIdx, unsigned int *storelog, int numProbePerTb);
+	void reservoir_sampling_cpu_openmp(unsigned int *allprobsHash, unsigned int *allprobsIdx, unsigned int *storelog, int numProbePerTb,   std::function<size_t(size_t, size_t)> indexFunc);
 	void add_table_cpu_openmp(unsigned int *storelog, int numProbePerTb);
 	void query_extractRows_cpu_openmp(int numQueryEntries, int segmentSizePow2, unsigned int *queue, unsigned int *hashIndices);
 	void query_frequentitem_cpu_openmp(int numQueryEntries, unsigned int *outputs, unsigned int *hashIndices, int topk);
 
 	/* Routines. */
-	void HashAddCPUTB(unsigned int *allprobsHash, unsigned int* allprobsIdx, int numProbePerTb, int numInputEntries);
+	void HashAddCPUTB(unsigned int *allprobsHash, unsigned int* allprobsIdx, int numProbePerTb, int numInputEntries,   std::function<size_t(size_t, size_t)> indexFunc);
 	void kSelect(unsigned int *tally, unsigned int *outputs, int segmentSize, int numQueryEntries, int topk);
 
 	/* Aux. */
@@ -115,7 +116,7 @@ public:
 	@param dataMarker Marks the start index of each vector in dataIdx and dataVal.
 		Have an additional marker at the end to mark the (end+1) index.
 	*/
-	void add(int numInputEntries, unsigned int* allprobsHash, unsigned int* allprobsIdx);
+	void add(int numInputEntries, unsigned int* allprobsHash, unsigned int* allprobsIdx,  std::function<size_t(size_t, size_t)> indexFunc);
 
 	/** Query vectors (in sparse format) and return top k neighbors for each.
 	Near-neighbors for each query will be returned in descending similarity.

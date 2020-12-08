@@ -4,11 +4,12 @@
 #include "FrequentItems.h"
 #include <algorithm>
 #include "omp.h"
+#include <functional>
 
 //#define DEBUG_TALLY
 
 void LSHReservoirSampler::reservoir_sampling_cpu_openmp(unsigned int *allprobsHash, unsigned int *allprobsIdx,
-	unsigned int *storelog, int numProbePerTb) {
+	unsigned int *storelog, int numProbePerTb,  std::function<size_t(size_t, size_t)> indexFunc) {
 
 	unsigned int counter, allocIdx, reservoirRandNum, TB, hashIdx, inputIdx, ct, reservoir_full, location;
 
@@ -18,8 +19,8 @@ void LSHReservoirSampler::reservoir_sampling_cpu_openmp(unsigned int *allprobsHa
 
 			TB = numProbePerTb * tb;
 
-			hashIdx = allprobsHash[allprobsHashSimpleIdx(numProbePerTb, tb, probeIdx)];
-			inputIdx = allprobsIdx[allprobsHashSimpleIdx(numProbePerTb, tb, probeIdx)];
+			hashIdx = allprobsHash[indexFunc(tb, probeIdx)];
+			inputIdx = allprobsIdx[indexFunc(tb, probeIdx)];
 			ct = 0;
 
 			/* Allocate the reservoir if non-existent. */
@@ -69,7 +70,7 @@ void LSHReservoirSampler::add_table_cpu_openmp(unsigned int *storelog, int numPr
 
 	unsigned int id, hashIdx, allocIdx;
 	unsigned locCapped;
-//#pragma omp parallel for private(allocIdx, id, hashIdx, locCapped)
+#pragma omp parallel for private(allocIdx, id, hashIdx, locCapped)
 	for (int probeIdx = 0; probeIdx < numProbePerTb; probeIdx++) {
 		for (unsigned int tb = 0; tb < _numTables; tb++) {
 
@@ -80,7 +81,7 @@ void LSHReservoirSampler::add_table_cpu_openmp(unsigned int *storelog, int numPr
 			locCapped = storelog[storelogLocationIdx(numProbePerTb, probeIdx, tb)];
 
 			if (locCapped < _reservoirSize) {
-				_tableMem[tableMemResIdx(tb, allocIdx, _aggNumReservoirs) + locCapped] = id + _sequentialIDCounter_kernel;
+				_tableMem[tableMemResIdx(tb, allocIdx, _aggNumReservoirs) + locCapped] = id;
 			}
 		}
 	}
