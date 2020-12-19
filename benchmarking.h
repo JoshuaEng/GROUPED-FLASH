@@ -72,7 +72,7 @@ Then modify the file location and parameters below in the Parameters section. */
 #define AVAILABLE_TOPK				1024
 #define TOPK						128
 
-#define BASEFILE		"../url/url_combined"
+#define BASEFILE		"../url/url_combined2"
 #define GTRUTHINDICE	"../CalculateGroundTruth/url_gtruth_indices3.txt"
 #define GTRUTHDIST		"../CalculateGroundTruth/url_gtruth_distances.txt"
 
