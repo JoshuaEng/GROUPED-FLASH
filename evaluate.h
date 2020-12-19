@@ -37,8 +37,8 @@ void evaluate(
 void gMetric(unsigned int *queryOutputs, int numQueries, int topk,
 	unsigned int *groundTruthIdx, float *groundTruthDist, int availableTopk, float *gstdVec, const int gstdCnt, int *nList, int nCnt);
 
-void rMetric(unsigned int *queryOutputs, int numQueries, int topk,
-	unsigned int *groundTruthIdx, int availableTopk, int *nList, int nCnt);
+void r1Metric(unsigned int *queryOutputs, int numQueries, int topk,
+	unsigned int *groundTruthIdx, int availableTopk);
 
 void tMetric(unsigned int *queryOutputs, int numQueries, int topk,
 	unsigned int *groundTruthIdx, float *groundTruthDist, int availableTopk, int *tstdVec, const int tstdCnt);

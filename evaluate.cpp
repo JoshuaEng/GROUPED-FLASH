@@ -26,9 +26,10 @@ void evaluate (
 	int *nList,				// The n of R@n, T@n or G@n interested, a vector.
 	int nCnt) {				// The number of n(s) interested.
 
-	rMetric(queryOutputs, numQueries, topk, groundTruthIdx, availableTopk, nList, nCnt);
+	r1Metric(queryOutputs, numQueries, topk, groundTruthIdx, availableTopk);
 	tMetric(queryOutputs, numQueries, topk, groundTruthIdx, groundTruthDist, availableTopk, tstdVec, tstdCnt);
-	gMetric(queryOutputs, numQueries, topk, groundTruthIdx, groundTruthDist, availableTopk, gstdVec, gstdCnt, nList, nCnt);
+	
+	// gMetric(queryOutputs, numQueries, topk, groundTruthIdx, groundTruthDist, availableTopk, gstdVec, gstdCnt, nList, nCnt);
 }
 
 void similarityOfData(float *groundTruthDist, unsigned int numQueries, unsigned int topk,
@@ -244,14 +245,13 @@ void gMetric(unsigned int *queryOutputs, int numQueries, int topk,
 }
 
 // Accuracy measure R@k: fraction of query where the nearest neighbor is in the top k result.
-void rMetric(unsigned int *queryOutputs, int numQueries, int topk,
-	unsigned int *groundTruthIdx, int availableTopk, int *nList, int nCnt) {
+void r1Metric(unsigned int *queryOutputs, int numQueries, int topk,
+	unsigned int *groundTruthIdx, int availableTopk) {
 
 	printf("\nR@k: Average fraction of query where the nearest neighbor is in the k first results. \n");
 
-	/* There are nCnts different standards that needs to be tested.
-	   good_counts keep track of the counts of queries that have their top-1 found in nList[nCnt]. */
-	int *good_counts = new int[nCnt]();
+
+	int *good_counts = new int[topk]();
 
 	unsigned int top_nn;
 
@@ -262,26 +262,18 @@ void rMetric(unsigned int *queryOutputs, int numQueries, int topk,
 		for (int j = 0; j < topk; j++) { // Look for top-1 in top-k.
 
 			if (top_nn == queryOutputs[i * topk + j]) {  // When top-1 is found.
-				for (int myN = 0; myN < nCnt; myN++) {	 // For each standard.
-					if (j < nList[myN]) {	// If standard is satisfied.
-						good_counts[myN]++; // Count this query.
-					}
+				for (int goodN = j; goodN < topk; goodN++) {	 // For each standard.
+					good_counts[goodN]++; // Count this query.
 				}
-				goto next_q; // Force goto next query to ensure testing integrity. .
+				break; // Force goto next query to ensure testing integrity. .
 			}
 
 		}
-	next_q:
-		continue;
 	}
 
-	for (int myN = 0; myN < nCnt; myN++) {
-		printf("R@%d = %1.3f \n", nList[myN], (float)good_counts[myN] / numQueries);
+	for (int myN = 0; myN < topk; myN++) {
+		printf("R%d@%d = %1.3f \n", 1, myN + 1, (float)good_counts[myN] / numQueries);
 	}
-	for (int myN = 0; myN < nCnt; myN++) printf("%d ", nList[myN]);
-	printf("\n");
-	for (int myN = 0; myN < nCnt; myN++) printf("%1.3f ", (float)good_counts[myN] / numQueries);
-	printf("\n"); printf("\n");
 	delete[] good_counts;
 }
 
@@ -321,3 +313,41 @@ void tMetric(unsigned int *queryOutputs, int numQueries, int topk,
 	delete[] sumOfFraction;
 
 }
+
+// void r10Metric(unsigned int *queryOutputs, int numQueries, int topk,
+// 	unsigned int *groundTruthIdx, float *groundTruthDist, int availableTopk, int *tstdVec, const int tstdCnt) {
+
+// 	printf("\nR10@k Average fraction of top 10 nearest neighbors returned in k first results. \n");
+
+// 	float *sumOfFraction = new float[tstdCnt]();
+
+// 	for (int g = 0; g < tstdCnt; g++) { // For each test.
+
+// 		for (int i = 0; i < numQueries; i++) {
+
+// 			unordered_set<unsigned int> topTGtruths(groundTruthIdx + i * availableTopk, groundTruthIdx + i * availableTopk + tstdVec[g]);
+// 			unordered_set<unsigned int> topTOutputs(queryOutputs + i * topk, queryOutputs + i * topk + tstdVec[g]);
+
+// 			float tmp = 0;
+// 			for (const auto& elem : topTGtruths) {
+// 				if (topTOutputs.find(elem) != topTOutputs.end()) { // If elem is found in the intersection.
+// 					tmp++;
+// 				}
+// 			}
+// 			sumOfFraction[g] += tmp / (float)tstdVec[g];
+// 		}
+// 	}
+
+// 	for (int g = 0; g < tstdCnt; g++) {
+// 		printf("T@%d = %1.3f\n", tstdVec[g],
+// 			(float)sumOfFraction[g] / (float)numQueries);
+// 	}
+// 	for (int g = 0; g < tstdCnt; g++) printf("%d ", tstdVec[g]);
+// 	printf("\n");
+// 	for (int g = 0; g < tstdCnt; g++) printf("%1.3f ", (float)sumOfFraction[g] / (float)numQueries);
+// 	printf("\n"); printf("\n");
+
+// 	delete[] sumOfFraction;
+
+// }
+
