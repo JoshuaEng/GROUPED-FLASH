@@ -213,7 +213,7 @@ void benchmark_sparse() {
   unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
   if (!USE_GROUPS) {
     std::cout << "Using normal!" << std::endl;
-    for (size_t REPS = 30; REPS <= 3050; REPS *= 1.5) {
+    for (size_t REPS = 1599; REPS <= 3050; REPS *= 1.5) {
 
       std::cout << "Initializing data hashes, array size " << REPS * (NUMBASE - start_offset) << endl;
       LSH *hashFamily = new LSH(2, K, REPS, RANGE); // Initialize LSH hash.
@@ -226,7 +226,11 @@ void benchmark_sparse() {
                           1);
 
       for (size_t RESERVOIR = 6; RESERVOIR <= 2000; RESERVOIR *= 1.5) {
+      // for (size_t RESERVOIR = 6; RESERVOIR <= 2000; RESERVOIR *= 1.5) {
         // if (((1 << RANGE) * REPS * RESERVOIR) < (1 << 30)) {
+        if (REPS * RESERVOIR > 1000000) {
+          continue;
+        }
         std::cout << "STATS_NORMAL: " << RESERVOIR << " " << RANGE << " "
                   << REPS << std::endl;
 #ifdef QUERYFILE

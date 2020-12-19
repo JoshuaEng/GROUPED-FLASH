@@ -96,10 +96,11 @@ if show_params:
                         label, r, b, hash_range, reps = record[2].split()
                         plt.annotate(str((r, b, hash_range, reps)), [record[1], math.log10(10000 / record[0] * 1000)])
 
-
+dataset = args.my_file.split("_")[1]
 plt.legend(loc='upper left')
 start, end = look_for.split("@")
 lookup = {"T": f"Top {end} recall in first {end} returned points", "S": f"Similarity of {end} returned points", "R": f"Recall of top 1 at {end}"}
 plt.xlabel(lookup[start])
 plt.ylabel('Queries per second (log 10)')
+plt.title((dataset).title())
 plt.show()
