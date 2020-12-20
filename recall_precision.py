@@ -15,51 +15,34 @@ args = parser.parse_args()
 save = args.save
 compare_by = args.compare_by
 maximum_time_per_query = int(args.max_time)
+num_queries = 10000
 
-best_r = 0
-with open(args.my_file, "r") as f:
-        while True:
-                line = f.readline()
-                if line == "":
-                        break
-                if line.split(" ")[0] == "STATS_GROUPS:":
-                        if int(line.split(" ")[1]) > 5:
-                                continue
-                        while True:
-                                line = f.readline()
-                                if line.startswith("Queried"):
-                                        time = float(line.split(" ")[-2][:-3])
-                                        if time > 10000 * maximum_time_per_query:
+def parse_file(file_name, line_hint, record):        
+        with open(file_name, "r") as f:
+                while True:
+                        line = f.readline()
+                        if line == "":
+                                break
+                        if line.split(" ")[0] == line_hint:
+                                while True:
+                                        line = f.readline()
+                                        if line.startswith("Queried"):
+                                                time = float(line.strip().split(" ")[-1][:-3])
+                                                if time > num_queries * maximum_time_per_query:
+                                                        break
+                                        if line.startswith(f"R{compare_by}@") and not line.startswith(f"R{compare_by}@k"):
+                                                r = float(line.split()[2])
+                                                p = int(compare_by) / int(line.split()[0][2 + len(compare_by):])
+                                                if p not in record:
+                                                        record[p] = 0
+                                                if r > record[p]:
+                                                        record[p] = r
+                                        if line == "":
                                                 break
-                                if line.startswith(f"R{compare_by}@") and not line.startswith(f"R{compare_by}@k"):
-                                        r = float(line.split()[2])
-                                        p = int(compare_by) / int(line.split()[0][2 + len(compare_by):])
-                                        if p not in group_record:
-                                                group_record[p] = 0
-                                        if r > group_record[p]:
-                                                group_record[p] = r
-                                if line == "":
-                                        break
-with open(args.their_file, "r") as f:
-        while True:
-                line = f.readline()
-                if line == "":
-                        break
-                if line.split(" ")[0] == "STATS_NORMAL:":
-                        saved = line
-                        while True:
-                                line = f.readline()
-                                if line.startswith("Queried"):
-                                        time = float(line.strip().split(" ")[-1][:-3])
-                                if line.startswith(f"R{compare_by}@") and not line.startswith(f"R{compare_by}@k"):
-                                        r = float(line.split()[2])
-                                        p = int(compare_by) / int(line.split()[0][2 + len(compare_by):])
-                                        if p not in normal_record:
-                                                normal_record[p] = 0
-                                        if r > normal_record[p]:
-                                                normal_record[p] = r
-                                if line == "":
-                                        break
+
+
+parse_file(args.my_file, "STATS_GROUPS:", group_record)
+parse_file(args.their_file, "STATS_NORMAL:", normal_record)
 
 import matplotlib.pyplot as plt
 import math

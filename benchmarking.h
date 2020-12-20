@@ -10,7 +10,7 @@ Then modify the file location and parameters below in the Parameters section. */
 // #define GPLUS
 // #define FRIENDSTER
 // #define KDD12
-#define USE_GROUPS true
+#define USE_GROUPS false
 
 /* Parameters. */
 
