@@ -40,6 +40,9 @@ void gMetric(unsigned int *queryOutputs, int numQueries, int topk,
 void r1Metric(unsigned int *queryOutputs, int numQueries, int topk,
 	unsigned int *groundTruthIdx, int availableTopk);
 
+void r10Metric(unsigned int *queryOutputs, int numQueries, int topk,
+	unsigned int *groundTruthIdx, int availableTopk);
+
 void tMetric(unsigned int *queryOutputs, int numQueries, int topk,
 	unsigned int *groundTruthIdx, float *groundTruthDist, int availableTopk, int *tstdVec, const int tstdCnt);
 

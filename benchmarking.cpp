@@ -226,8 +226,9 @@ void benchmark_sparse() {
                           1);
 
       for (size_t RESERVOIR = 6; RESERVOIR <= 2000; RESERVOIR *= 1.5) {
-      // for (size_t RESERVOIR = 6; RESERVOIR <= 2000; RESERVOIR *= 1.5) {
-        // if (((1 << RANGE) * REPS * RESERVOIR) < (1 << 30)) {
+        if (REPS * RESERVOIR < 128) {
+          continue;
+        }
         if (REPS * RESERVOIR > 1000000) {
           continue;
         }

@@ -27,6 +27,7 @@ void evaluate (
 	int nCnt) {				// The number of n(s) interested.
 
 	r1Metric(queryOutputs, numQueries, topk, groundTruthIdx, availableTopk);
+	r10Metric(queryOutputs, numQueries, topk, groundTruthIdx, availableTopk);
 	tMetric(queryOutputs, numQueries, topk, groundTruthIdx, groundTruthDist, availableTopk, tstdVec, tstdCnt);
 	
 	// gMetric(queryOutputs, numQueries, topk, groundTruthIdx, groundTruthDist, availableTopk, gstdVec, gstdCnt, nList, nCnt);
@@ -248,7 +249,7 @@ void gMetric(unsigned int *queryOutputs, int numQueries, int topk,
 void r1Metric(unsigned int *queryOutputs, int numQueries, int topk,
 	unsigned int *groundTruthIdx, int availableTopk) {
 
-	printf("\nR@k: Average fraction of query where the nearest neighbor is in the k first results. \n");
+	printf("\nR1@k: Average fraction of query where the nearest neighbor is in the k first results. \n");
 
 
 	int *good_counts = new int[topk]();
@@ -314,40 +315,31 @@ void tMetric(unsigned int *queryOutputs, int numQueries, int topk,
 
 }
 
-// void r10Metric(unsigned int *queryOutputs, int numQueries, int topk,
-// 	unsigned int *groundTruthIdx, float *groundTruthDist, int availableTopk, int *tstdVec, const int tstdCnt) {
+void r10Metric(unsigned int *queryOutputs, int numQueries, int topk,
+	unsigned int *groundTruthIdx, int availableTopk) {
 
-// 	printf("\nR10@k Average fraction of top 10 nearest neighbors returned in k first results. \n");
+	printf("\nR10@k Average fraction of top 10 nearest neighbors returned in k first results. \n");
 
-// 	float *sumOfFraction = new float[tstdCnt]();
+	int *good_counts = new int[topk]();
 
-// 	for (int g = 0; g < tstdCnt; g++) { // For each test.
+	for (int i = 0; i < numQueries; i++) {
+		unordered_set<unsigned int> topGtruths(groundTruthIdx + i * availableTopk, groundTruthIdx + i * availableTopk + 10);
+		for (int denominator = 10; denominator <= topk; denominator++) {
+			unordered_set<unsigned int> topOutputs(queryOutputs + i * topk, queryOutputs + i * topk + denominator);
+			for (const auto& elem : topGtruths) {
+				if (topOutputs.find(elem) != topOutputs.end()) { // If elem is found in the intersection.
+					good_counts[denominator - 10]++;
+				}
+			}
+		}
+	}
 
-// 		for (int i = 0; i < numQueries; i++) {
+	for (int denominator = 10; denominator <= topk; denominator++) {
+		printf("R%d@%d = %1.3f \n", 10, denominator, (float)good_counts[denominator - 10] / numQueries / 10);
+	}
+	printf("\n"); printf("\n");
 
-// 			unordered_set<unsigned int> topTGtruths(groundTruthIdx + i * availableTopk, groundTruthIdx + i * availableTopk + tstdVec[g]);
-// 			unordered_set<unsigned int> topTOutputs(queryOutputs + i * topk, queryOutputs + i * topk + tstdVec[g]);
+	delete[] good_counts;
 
-// 			float tmp = 0;
-// 			for (const auto& elem : topTGtruths) {
-// 				if (topTOutputs.find(elem) != topTOutputs.end()) { // If elem is found in the intersection.
-// 					tmp++;
-// 				}
-// 			}
-// 			sumOfFraction[g] += tmp / (float)tstdVec[g];
-// 		}
-// 	}
-
-// 	for (int g = 0; g < tstdCnt; g++) {
-// 		printf("T@%d = %1.3f\n", tstdVec[g],
-// 			(float)sumOfFraction[g] / (float)numQueries);
-// 	}
-// 	for (int g = 0; g < tstdCnt; g++) printf("%d ", tstdVec[g]);
-// 	printf("\n");
-// 	for (int g = 0; g < tstdCnt; g++) printf("%1.3f ", (float)sumOfFraction[g] / (float)numQueries);
-// 	printf("\n"); printf("\n");
-
-// 	delete[] sumOfFraction;
-
-// }
+}
 
