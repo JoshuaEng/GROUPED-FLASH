@@ -1,7 +1,3 @@
-# group_record2 = []
-group_record = {}
-normal_record = {}
-
 import argparse
 
 # Instantiate the parser
@@ -16,16 +12,24 @@ save = args.save
 compare_by = args.compare_by
 maximum_time_per_query = int(args.max_time)
 num_queries = 10000
+dataset = args.my_file.split("_")[1]
+size_map = {"url": 2376130, "webspam": 330000}
+num_points = size_map[dataset]
 
-def parse_file(file_name, line_hint, record):        
+def parse_file(file_name, line_hint, size_func):   
+        record = {}
+        sizes = {}
         with open(file_name, "r") as f:
                 while True:
                         line = f.readline()
                         if line == "":
                                 break
                         if line.split(" ")[0] == line_hint:
+                                start = line
                                 while True:
                                         line = f.readline()
+                                        if line.startswith("T@k"):
+                                                break
                                         if line.startswith("Queried"):
                                                 time = float(line.strip().split(" ")[-1][:-3])
                                                 if time > num_queries * maximum_time_per_query:
@@ -37,12 +41,59 @@ def parse_file(file_name, line_hint, record):
                                                         record[p] = 0
                                                 if r > record[p]:
                                                         record[p] = r
+                                                        sizes[p] = size_func(start)
                                         if line == "":
                                                 break
 
+        small_sizes = {key:val for key, val in sizes.items()} 
+        small_record = {key:val for key, val in record.items()}   
+        fudge_factor = 0.05                                
+        with open(file_name, "r") as f:
+                while True:
+                        line = f.readline()
+                        if line == "":
+                                break
+                        if line.split(" ")[0] == line_hint:
+                                start = line
+                                while True:
+                                        line = f.readline()
+                                        if line.startswith("T@k"):
+                                                break
+                                        if line.startswith("Queried"):
+                                                time = float(line.strip().split(" ")[-1][:-3])
+                                                if time > num_queries * maximum_time_per_query:
+                                                        break
+                                        if line.startswith(f"R{compare_by}@") and not line.startswith(f"R{compare_by}@k"):
+                                                r = float(line.split()[2])
+                                                p = int(compare_by) / int(line.split()[0][2 + len(compare_by):])
+                                                if r >= record[p] * (1 - fudge_factor):
+                                                        if size_func(start) < small_sizes[p] :
+                                                                small_sizes[p] = size_func(start)
+                                                                small_record[p] = r
+                                        if line == "":
+                                                break
+        
+        return record, sizes, small_record, small_sizes
 
-parse_file(args.my_file, "STATS_GROUPS:", group_record)
-parse_file(args.their_file, "STATS_NORMAL:", normal_record)
+
+def flinng_size_calc(line):
+        label, r, b, hash_range, reps = line.split()
+        return 8 * int(r) * int(reps) * num_points / 1e9 / 4
+
+def flash_size_calc(line):
+        label, reservoire_size, hash_range, reps = line.split()
+        return 8 * (2**int(hash_range)) * int(reps) * int(reservoire_size) / 1e9
+
+group_record, group_sizes, group_small_record, group_small_sizes = parse_file(args.my_file, "STATS_GROUPS:", flinng_size_calc)
+normal_record, normal_sizes, normal_small_record, normal_small_sizes = parse_file(args.their_file, "STATS_NORMAL:", flash_size_calc)
+
+if not save:
+        def get_average(sizes):
+                return sum(sizes.values()) / len(sizes.values())
+        print(get_average(group_sizes), get_average(group_small_sizes))
+        print(get_average(normal_sizes), get_average(normal_small_sizes))
+        print(get_average({key:(group_record[key] - normal_record[key]) for key in normal_record.keys()}))
+        print(get_average({key:(group_small_record[key] - normal_small_record[key]) for key in normal_record.keys()}))
 
 import matplotlib.pyplot as plt
 import math
