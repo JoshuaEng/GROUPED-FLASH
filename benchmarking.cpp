@@ -54,31 +54,7 @@ void do_group(size_t B, size_t R, size_t REPS, size_t RANGE, uint *hashes,
   std::cout << "Queried " << NUMQUERY << " datapoints, used " << etime_0
             << "ms. \n";
 
-  /* Quality evaluations. */
-  const int nCnt = 10;
-  int nList[nCnt] = {1, 10, 20, 30, 32, 40, 50, 64, 100, TOPK};
-  const int gstdCnt = 8;
-  float gstdVec[gstdCnt] = {0.95, 0.90, 0.85, 0.80, 0.75, 0.70, 0.65, 0.50};
-  const int tstdCnt = 10;
-  int tstdVec[tstdCnt] = {1, 10, 20, 30, 32, 40, 50, 64, 100, TOPK};
-
-  // TODO: Fix this for graphs
-#ifndef QUERYFILE
-  if (!similarityMetric(query_sparse_indice, query_sparse_val,
-                        query_sparse_marker, query_sparse_indice,
-                        query_sparse_val, query_sparse_marker + NUMQUERY,
-                        queryOutputs, gtruth_dist, NUMQUERY, TOPK,
-                        AVAILABLE_TOPK, nList, nCnt, NUMBASE)) {
-    delete fling;
-    delete queryOutputs;
-    return;
-  }
-#endif
-
-  similarityOfData(gtruth_dist, NUMQUERY, TOPK, AVAILABLE_TOPK, nList, nCnt);
-  evaluate(queryOutputs, NUMQUERY, TOPK, gtruth_indice, gtruth_dist,
-           AVAILABLE_TOPK, gstdVec, gstdCnt, tstdVec, tstdCnt, nList,
-           nCnt); // The number of n interested.
+  evaluate(queryOutputs, NUMQUERY, TOPK, gtruth_indice, gtruth_dist, AVAILABLE_TOPK);
 
   delete fling;
   delete queryOutputs;
@@ -102,11 +78,9 @@ void do_normal(size_t RESERVOIR, size_t REPS, size_t RANGE, uint *hashes, uint *
   float etime_0;
 
   // Dimension not used so just pass in -1
+  // Initialize hashtables and other datastructures.
   LSHReservoirSampler *myReservoir = new LSHReservoirSampler(
-      hashFamily, RANGE, REPS, RESERVOIR, -1, RANGE, NUMBASE, QUERYPROBES,
-      HASHINGPROBES,
-      OCCUPANCY); // Initialize hashtables and other datastructures.
-
+      hashFamily, RANGE, REPS, RESERVOIR, -1, RANGE, NUMBASE, 1, 1, 1); 
 
 
   for (size_t start = 0; start < NUMBASE - start_offset;) {
@@ -127,31 +101,7 @@ void do_normal(size_t RESERVOIR, size_t REPS, size_t RANGE, uint *hashes, uint *
   std::cout << "Queried " << NUMQUERY << " datapoints, used " << etime_0
             << "ms." << endl;
  
-  /* Quality evaluations. */
-  const int nCnt = 10;
-  int nList[nCnt] = {1, 10, 20, 30, 32, 40, 50, 64, 100, TOPK};
-  const int gstdCnt = 8;
-  float gstdVec[gstdCnt] = {0.95, 0.90, 0.85, 0.80, 0.75, 0.70, 0.65, 0.50};
-  const int tstdCnt = 10;
-  int tstdVec[tstdCnt] = {1, 10, 20, 30, 32, 40, 50, 64, 100, TOPK};
-
-#ifndef QUERYFILE
-  // TODO: Fix this for graphs
-  if (!similarityMetric(query_sparse_indice, query_sparse_val,
-                        query_sparse_marker, query_sparse_indice,
-                        query_sparse_val, query_sparse_marker + NUMQUERY,
-                        queryOutputs, gtruth_dist, NUMQUERY, TOPK,
-                        AVAILABLE_TOPK, nList, nCnt, NUMBASE)) {
-    delete myReservoir;
-    delete queryOutputs;
-    return;
-  }
-#endif
-
-  similarityOfData(gtruth_dist, NUMQUERY, TOPK, AVAILABLE_TOPK, nList, nCnt);
-  evaluate(queryOutputs, NUMQUERY, TOPK, gtruth_indice, gtruth_dist,
-           AVAILABLE_TOPK, gstdVec, gstdCnt, tstdVec, tstdCnt, nList,
-           nCnt); // The number of n interested.
+  evaluate(queryOutputs, NUMQUERY, TOPK, gtruth_indice, gtruth_dist, AVAILABLE_TOPK);
 
   delete myReservoir;
   delete queryOutputs;
@@ -168,12 +118,28 @@ void benchmark_sparse() {
   std::cout << "Reading groundtruth and data ... " << std::endl;
   begin = Clock::now();
 
-// Read in data
-#ifndef GRAPHDATASET
-  unsigned int *gtruth_indice = new unsigned int[NUMQUERY * AVAILABLE_TOPK];
-  float *gtruth_dist = new float[NUMQUERY * AVAILABLE_TOPK];
+  // Read in data and ground truth
+  int *sparse_indice;
+  float *sparse_val;
+  int *sparse_marker;
+  int *query_sparse_indice;
+  float *query_val;
+  int *query_marker;
+  readData(BASEFILE, &sparse_indice, &sparse_val, &sparse_marker, 10000, NUMBASE);
+
+  // Read in ground truth
+  unsigned int *gtruth_indice;
+  float *gtruth_dist;
   readGroundTruthInt(GTRUTHINDICE, NUMQUERY, AVAILABLE_TOPK, gtruth_indice);
   readGroundTruthFloat(GTRUTHDIST, NUMQUERY, AVAILABLE_TOPK, gtruth_dist);
+
+  // Read in queries
+  int *query_sparse_indice;
+  float *query_val;
+  int *query_marker;
+  readData(BASEFILE, &sparse_indice, &sparse_val, &sparse_marker);
+
+#ifndef GRAPHDATASET
 
   int *sparse_indice = new int[(unsigned)((NUMBASE + NUMQUERY) * DIMENSION)];
   float *sparse_val = new float[(unsigned)((NUMBASE + NUMQUERY) * DIMENSION)];
@@ -211,7 +177,7 @@ void benchmark_sparse() {
 
   cout << "Starting index building and query grid parameter test" << endl;
   unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
-  if (!USE_GROUPS) {
+  if (!USE_FLINNG) {
     std::cout << "Using normal!" << std::endl;
     for (size_t REPS = 6; REPS <= 3050; REPS *= 1.5) {
 
