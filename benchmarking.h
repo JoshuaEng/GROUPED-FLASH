@@ -9,10 +9,10 @@ Then modify the file location and parameters below in the Parameters section. */
 // sed -i ':a;N;$!ba;s/\n/ /g' ../CalculateGroundTruth/proteomes_indices.txt 
 
 // #define URL
-// #define WEBSPAM_TRI
-#define DNA_FULL_GENOME
+#define WEBSPAM_TRI
+// #define DNA_FULL_GENOME
 
-#define USE_FLINNG false
+#define USE_FLINNG true
 
 /* Parameters. */
 #if defined URL
@@ -40,8 +40,8 @@ Then modify the file location and parameters below in the Parameters section. */
 #define TOPK					128
 
 #define BASEFILE		"../Data/Url/url_data"
-#define GTRUTHINDICE	        "../Data/Url/url_gtruth_indices"
-#define GTRUTHDIST		"../Data/Url/url_gtruth_distances"
+#define GTRUTHINDICE	        "../Data/Url/url_indices"
+#define GTRUTHDIST		"../Data/Url/url_distances"
 
 #elif defined WEBSPAM_TRI
 
@@ -66,8 +66,8 @@ Then modify the file location and parameters below in the Parameters section. */
 #define TOPK					128
 
 #define BASEFILE	        "../Data/Webspam/webspam_data"
-#define GTRUTHINDICE	        "../Data/Webspam/webspam_gtruth_indices"
-#define GTRUTHDIST		"../Data/Webspam/webspam_gtruth_distances"
+#define GTRUTHINDICE	        "../Data/Webspam/webspam_indices"
+#define GTRUTHDIST		"../Data/Webspam/webspam_distances"
 
 #elif defined DNA_FULL_GENOME
 
@@ -83,8 +83,8 @@ Then modify the file location and parameters below in the Parameters section. */
 #define AVAILABLE_TOPK				128
 
 #define BASEFILE	        "../Data/Genomes/genomes_data"
-#define GTRUTHINDICE	        "../Data/Genomes/genomes_gtruth_indices"
-#define GTRUTHDIST		"../Data/Genomes/genomes_gtruth_distances"
+#define GTRUTHINDICE	        "../Data/Genomes/genomes_indices"
+#define GTRUTHDIST		"../Data/Genomes/genomes_distances"
 #endif
 
 void benchmark_kselect();

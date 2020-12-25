@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include "dataset.h"
 
 using namespace std;
 
@@ -13,6 +14,36 @@ bool load_vector_from_stream_int(std::istream &in, std::vector<size_t> &vec,
                                  size_t *first);
 bool load_vector_from_stream_float(std::istream &in, std::vector<float> &vec,
                                    size_t *first);
+void readSet(std::istream &data_file, uint size, int **sparse_indice, float **sparse_dist, int **sparse_marker);
+																	
+
+void readDataAndQueries(string baseFile, uint numQuery, uint numBase, 
+                     int **sparse_data_indice, float **sparse_data_val, int **sparse_data_marker,
+                     int **sparse_query_indice, float **sparse_query_val, int **sparse_query_marker) {
+		
+	ifstream data_file(baseFile);
+#ifdef SETDATASET
+	readSet(data_file, numQuery, sparse_query_indice, sparse_query_val, sparse_query_marker);
+	readSet(data_file, numBase, sparse_data_indice, sparse_data_val, sparse_data_marker);
+#elif defined(SPARSEDATASET)
+  *sparse_query_indice = new int[NUMQUERY * DIMENSION];
+  *sparse_query_val = new float[NUMQUERY * DIMENSION];
+  *sparse_query_marker = new int[NUMQUERY + 1];
+	readSparse(baseFile, 0, numQuery, 
+						 *sparse_query_indice, *sparse_query_val, *sparse_query_marker,
+						 NUMQUERY * DIMENSION);
+
+  *sparse_data_indice = new int[NUMBASE * DIMENSION];
+  *sparse_data_val = new float[NUMBASE * DIMENSION];
+  *sparse_data_marker = new int[NUMBASE + 1];
+	readSparse(baseFile, numQuery, numBase, 
+						 *sparse_data_indice, *sparse_data_val, *sparse_data_marker,
+						 NUMBASE * DIMENSION);
+
+#endif
+	data_file.close();
+}
+
 
 void anshuReadSparse(string fileName, int *indices, int *markers,
                      unsigned int n, unsigned int bufferlen) {
@@ -341,70 +372,24 @@ void readGroundTruthFloat(const std::string &file, int numQueries,
   myFile.close();
 }
 
-// TODO: Merge read methods
-
-void readGraphQueries(const std::string &query_file_name, int **sparse_indice,
-                      float **sparse_dist, int **sparse_marker) {
-  // Read in data
-  ifstream query_file = ifstream(query_file_name);
-  vector<vector<size_t>> *queries = new vector<vector<size_t>>(NUMQUERY);
-  size_t array_length = 0;
-  size_t actual_index = 0;
-  if (query_file.is_open()) {
-    vector<size_t> row = vector<size_t>(0);
-    size_t index;
-    while (load_vector_from_stream_int(query_file, row, &index)) {
-      queries->at(actual_index++) = row;
-      array_length += row.size();
-    }
-    query_file.close();
-  }
-  else {
-    cerr << "Could not open query file" << endl;
-    exit(1);
-  }
-  *sparse_indice = new int[array_length];
-  *sparse_dist = new float[array_length];
-  *sparse_marker = new int[NUMQUERY + 1];
-  size_t current_position = 0;
-  for (size_t i = 0; i < NUMQUERY; ++i) {
-    (*sparse_marker)[i] = current_position;
-    for (size_t j = 0; j < queries->at(i).size(); ++j) {
-      (*sparse_dist)[current_position] = 1;
-      (*sparse_indice)[current_position] = queries->at(i).at(j);
-      ++current_position;
-    }
-  }
-  (*sparse_marker)[NUMQUERY] = current_position;
-  delete queries;
-}
-
-void readGraph(const std::string &gtruth_file_name, uint **gtruth_indice,
-               float **gtruth_dist, const std::string &data_file_name,
-               int **sparse_indice, float **sparse_dist, int **sparse_marker) {
+void readSet(std::istream &data_file, uint size, int **sparse_indice, float **sparse_dist, int **sparse_marker) {
 
   // Read in data
-  ifstream data_file = ifstream(data_file_name);
-  vector<vector<size_t>> *data = new vector<vector<size_t>>(NUMBASE);
+  vector<vector<size_t>> *data = new vector<vector<size_t>>(size);
   size_t array_length = 0;
-  if (data_file.is_open()) {
-    vector<size_t> row = vector<size_t>(0);
-    size_t index;
-    while (load_vector_from_stream_int(data_file, row, &index)) {
-      data->at(index) = row;
-      array_length += row.size();
-    }
-    data_file.close();
-  }
-  else {
-    cerr << "Could not open data file" << endl;
-    exit(1);
-  }
+	vector<size_t> row = vector<size_t>(0);
+	size_t index;
+	size_t i = 0;
+	while (load_vector_from_stream_int(data_file, row, &index) && data->size() < size) {
+		data->at(i) = row;
+		i++;
+		array_length += row.size();
+	}
   *sparse_indice = new int[array_length];
   *sparse_dist = new float[array_length];
-  *sparse_marker = new int[NUMBASE + 1];
+  *sparse_marker = new int[size + 1];
   size_t current_position = 0;
-  for (size_t i = 0; i < NUMBASE; ++i) {
+  for (size_t i = 0; i < size; ++i) {
     (*sparse_marker)[i] = current_position;
     for (size_t j = 0; j < data->at(i).size(); ++j) {
       (*sparse_dist)[current_position] = 1;
@@ -412,38 +397,8 @@ void readGraph(const std::string &gtruth_file_name, uint **gtruth_indice,
       ++current_position;
     }
   }
-  (*sparse_marker)[NUMBASE] = current_position;
+  (*sparse_marker)[size] = current_position;
   delete data;
-
-
-  // Read in ground truth
-  ifstream gtruth_file = ifstream(gtruth_file_name);
-  *gtruth_indice = new uint[NUMQUERY * TOPK];
-  *gtruth_dist = new float[NUMQUERY * TOPK];
-  if (gtruth_file.is_open()) {
-    for (size_t i = 0; i < NUMQUERY; i++) {
-      vector<size_t> row_1 = vector<size_t>(0);
-      size_t index;
-      load_vector_from_stream_int(gtruth_file, row_1, &index);
-      for (int j = i * TOPK; j < (i + 1) * TOPK; j++) {
-        (*gtruth_indice)[j] = row_1[j - i * TOPK];
-      }
-      vector<float> row_2 = vector<float>(0);
-      load_vector_from_stream_float(gtruth_file, row_2, &index);
-      for (int j = i * TOPK; j < (i + 1) * TOPK; j++) {
-        (*gtruth_dist)[j] = row_2[j - i * TOPK];
-      }
-      string line;
-      getline(gtruth_file, line);
-    }
-    gtruth_file.close();
-  }
-  else {
-    cerr << "Could not open ground truth file" << endl;
-    exit(1);
-  }
-
-  cout << "Done reading" << endl;
 }
 
 bool load_vector_from_stream_int(std::istream &in, std::vector<size_t> &vec,

@@ -23,11 +23,6 @@ void do_group(size_t B, size_t R, size_t REPS, size_t RANGE, uint *hashes,
               int *query_sparse_indice, float *query_sparse_val, int *query_sparse_marker, 
               LSH *hash_family) {
 
-  uint offset = 0;
-#ifndef QUERYFILE
-  offset = NUMQUERY;
-#endif
-
   unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
 
   auto begin = Clock::now();
@@ -35,8 +30,7 @@ void do_group(size_t B, size_t R, size_t REPS, size_t RANGE, uint *hashes,
   float etime_0;
 
   // Create index
-  FLING *fling =
-      new FLING(R, B, hashes, max_reps, hash_family, RANGE, REPS, NUMBASE - offset);
+  FLING *fling = new FLING(R, B, hashes, max_reps, hash_family, RANGE, REPS, NUMBASE);
   fling->finalize_construction();
 
   // Do queries
@@ -68,11 +62,6 @@ void do_normal(size_t RESERVOIR, size_t REPS, size_t RANGE, uint *hashes, uint *
 
   unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
 
-  uint start_offset = 0;
-#ifndef QUERYFILE
-  start_offset = NUMQUERY;
-#endif
-
   auto begin = Clock::now();
   auto end = Clock::now();
   float etime_0;
@@ -83,10 +72,10 @@ void do_normal(size_t RESERVOIR, size_t REPS, size_t RANGE, uint *hashes, uint *
       hashFamily, RANGE, REPS, RESERVOIR, -1, RANGE, NUMBASE, 1, 1, 1); 
 
 
-  for (size_t start = 0; start < NUMBASE - start_offset;) {
-    size_t end = min(start + NUMBASE / NUMHASHBATCH, (size_t)NUMBASE - start_offset);
-    auto indexFunc = [start_offset, start](size_t table, size_t probe) { 
-      return (table * (size_t) (NUMBASE - start_offset) + start + probe); 
+  for (size_t start = 0; start < NUMBASE;) {
+    size_t end = min(start + NUMBASE / NUMHASHBATCH, (size_t)NUMBASE);
+    auto indexFunc = [start](size_t table, size_t probe) { 
+      return (table * (size_t) (NUMBASE) + start + probe); 
     };
     myReservoir->add(end - start, hashes, indices, indexFunc);
     start = end;
@@ -118,55 +107,23 @@ void benchmark_sparse() {
   std::cout << "Reading groundtruth and data ... " << std::endl;
   begin = Clock::now();
 
-  // Read in data and ground truth
-  int *sparse_indice;
-  float *sparse_val;
-  int *sparse_marker;
-  int *query_sparse_indice;
-  float *query_val;
-  int *query_marker;
-  readData(BASEFILE, &sparse_indice, &sparse_val, &sparse_marker, 10000, NUMBASE);
+  // Read in data and queries
+  int *sparse_data_indice;
+  float *sparse_data_val;
+  int *sparse_data_marker;
+  int *sparse_query_indice;
+  float *sparse_query_val;
+  int *sparse_query_marker;
+  readDataAndQueries(BASEFILE, NUMQUERY, NUMBASE, 
+                     &sparse_data_indice, &sparse_data_val, &sparse_data_marker,
+                     &sparse_query_indice, &sparse_query_val, &sparse_query_marker);
 
   // Read in ground truth
-  unsigned int *gtruth_indice;
-  float *gtruth_dist;
+  unsigned int *gtruth_indice = new unsigned int[NUMQUERY * AVAILABLE_TOPK];
+  float *gtruth_dist = new float[NUMQUERY * AVAILABLE_TOPK];
   readGroundTruthInt(GTRUTHINDICE, NUMQUERY, AVAILABLE_TOPK, gtruth_indice);
   readGroundTruthFloat(GTRUTHDIST, NUMQUERY, AVAILABLE_TOPK, gtruth_dist);
 
-  // Read in queries
-  int *query_sparse_indice;
-  float *query_val;
-  int *query_marker;
-  readData(BASEFILE, &sparse_indice, &sparse_val, &sparse_marker);
-
-#ifndef GRAPHDATASET
-
-  int *sparse_indice = new int[(unsigned)((NUMBASE + NUMQUERY) * DIMENSION)];
-  float *sparse_val = new float[(unsigned)((NUMBASE + NUMQUERY) * DIMENSION)];
-  int *sparse_marker = new int[(NUMBASE + NUMQUERY) + 1];
-  readSparse(BASEFILE, 0, (unsigned)(NUMBASE + NUMQUERY), sparse_indice,
-             sparse_val, sparse_marker,
-             (unsigned)((NUMBASE + NUMQUERY) * DIMENSION));
-            
-  uint start_offset = NUMQUERY;
-
-#else
-  unsigned int *gtruth_indice;
-  float *gtruth_dist;
-  int *sparse_indice;
-  float *sparse_val;
-  int *sparse_marker;
-  readGraph(GTRUTH, &gtruth_indice, &gtruth_dist, BASEFILE, &sparse_indice,
-            &sparse_val, &sparse_marker);
-
-  int *query_sparse_indice;
-  float *query_val;
-  int *query_marker;
-  readGraphQueries(QUERYFILE, &query_sparse_indice, &query_val, &query_marker);
-  
-  uint start_offset = 0;
-
-#endif
 
   end = Clock::now();
   etime_0 = (end - begin).count() / 1000000;
@@ -181,35 +138,28 @@ void benchmark_sparse() {
     std::cout << "Using normal!" << std::endl;
     for (size_t REPS = 6; REPS <= 3050; REPS *= 1.5) {
 
-      std::cout << "Initializing data hashes, array size " << REPS * (NUMBASE - start_offset) << endl;
+      std::cout << "Initializing data hashes, array size " << REPS * NUMBASE << endl;
       LSH *hashFamily = new LSH(2, K, REPS, RANGE); // Initialize LSH hash.
-      unsigned int *hashes =
-          new unsigned int[REPS * (NUMBASE - start_offset)];
-      unsigned int *indices =
-          new unsigned int[REPS * (NUMBASE - start_offset)];
-      hashFamily->getHash(hashes, indices, sparse_indice, sparse_val,
-                          sparse_marker + start_offset, NUMBASE - start_offset,
-                          1);
+      unsigned int *hashes = new unsigned int[REPS * NUMBASE];
+      unsigned int *indices = new unsigned int[REPS * NUMBASE];
+      hashFamily->getHash(hashes, indices, 
+                          sparse_data_indice, sparse_data_val, sparse_data_marker, 
+                          NUMBASE, 1);
 
       for (size_t RESERVOIR = 6; RESERVOIR <= 2000; RESERVOIR *= 1.5) {
         if (REPS * RESERVOIR < 128) {
+          cout << "Skipping because too small\n";
           continue;
         }
-        if (REPS * RESERVOIR > 1000000) {
+        if ((REPS * RESERVOIR * (1 << RANGE)) > pow(10, 11)) {
+          cout << "Skipping because too big\n";
           continue;
         }
         std::cout << "STATS_NORMAL: " << RESERVOIR << " " << RANGE << " "
                   << REPS << std::endl;
-#ifdef QUERYFILE
+
           do_normal(RESERVOIR, REPS, RANGE, hashes, indices, REPS, gtruth_indice,
-                   gtruth_dist, query_sparse_indice, query_val, 
-                   query_marker, hashFamily);
-#else
-          do_normal(RESERVOIR, REPS, RANGE, hashes, indices, REPS, gtruth_indice,
-                   gtruth_dist, sparse_indice, sparse_val,
-                   sparse_marker, hashFamily);
-#endif
-        // }
+                   gtruth_dist, sparse_query_indice, sparse_query_val, sparse_query_marker, hashFamily);
       }
 
       delete[] hashes;
@@ -220,15 +170,15 @@ void benchmark_sparse() {
     std::cout << "Using groups!" << std::endl;
     for (size_t REPS = 20; REPS <= 2560; REPS *= 2) {
 
-      std::cout << "Initializing data hashes, array size " << REPS * (NUMBASE - start_offset) << endl;
+      std::cout << "Initializing data hashes, array size " << REPS * NUMBASE << endl;
       LSH *hashFamily = new LSH(2, K, REPS, RANGE); // Initialize LSH hash.
       unsigned int *hashes =
-          new unsigned int[REPS * (NUMBASE - start_offset)];
+          new unsigned int[REPS * NUMBASE];
       unsigned int *indices =
-          new unsigned int[REPS * (NUMBASE - start_offset)];
-      hashFamily->getHash(hashes, indices, sparse_indice, sparse_val,
-                          sparse_marker + start_offset, NUMBASE - start_offset,
-                          1);
+          new unsigned int[REPS * NUMBASE];
+      hashFamily->getHash(hashes, indices, 
+                          sparse_data_indice, sparse_data_val, sparse_data_marker, 
+                          NUMBASE, 1);
 
       std::cout << "Initializing query hashes, array size " << REPS * NUMQUERY << endl;
 
@@ -236,15 +186,9 @@ void benchmark_sparse() {
         for (size_t B = 2000; B * R <= 1 << 16; B *= 2) {
           std::cout << "STATS_GROUPS: " << R << " " << B << " " << RANGE << " "
                     << REPS << std::endl;
-#ifdef QUERYFILE
           do_group(B, R, REPS, RANGE, hashes, REPS, gtruth_indice,
-                   gtruth_dist,  query_sparse_indice, query_val, 
-                   query_marker, hashFamily);
-#else
-          do_group(B, R, REPS, RANGE, hashes, REPS, gtruth_indice,
-                   gtruth_dist, sparse_indice, sparse_val,
-                   sparse_marker, hashFamily);
-#endif
+                   gtruth_dist, sparse_query_indice, sparse_query_val,
+                   sparse_query_marker, hashFamily);
         }
       }
     
@@ -254,9 +198,12 @@ void benchmark_sparse() {
     }
   }
 
-  delete[] sparse_indice;
-  delete[] sparse_val;
-  delete[] sparse_marker;
+  delete[] sparse_data_indice;
+  delete[] sparse_data_val;
+  delete[] sparse_data_marker;
+  delete[] sparse_query_indice;
+  delete[] sparse_query_val;
+  delete[] sparse_query_marker;
   delete[] gtruth_indice;
   delete[] gtruth_dist;
   delete[] queryOutputs;
