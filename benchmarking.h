@@ -4,13 +4,12 @@
 /* Select a dataset below by uncommenting it.
 Then modify the file location and parameters below in the Parameters section. */
 
-// Note that gtruthdist and gtruthindc require no new lines (afaik), so
-// use a sed command to fix it, e.g.
-// sed -i ':a;N;$!ba;s/\n/ /g' ../CalculateGroundTruth/proteomes_indices.txt 
+// Note that gtruthdist and gtruthindc require there to be no new lines (afaik), so
+// replace new lines with spaces in those files
 
 // #define URL
-#define WEBSPAM_TRI
-// #define DNA_FULL_GENOME
+// #define WEBSPAM_TRI
+#define DNA_FULL_GENOME
 
 #define USE_FLINNG true
 
@@ -39,9 +38,9 @@ Then modify the file location and parameters below in the Parameters section. */
 #define AVAILABLE_TOPK				1024
 #define TOPK					128
 
-#define BASEFILE		"../Data/Url/url_data"
-#define GTRUTHINDICE	        "../Data/Url/url_indices"
-#define GTRUTHDIST		"../Data/Url/url_distances"
+#define BASEFILE		"../Data/Url/data"
+#define GTRUTHINDICE	        "../Data/Url/indices"
+#define GTRUTHDIST		"../Data/Url/distances"
 
 #elif defined WEBSPAM_TRI
 
@@ -56,7 +55,6 @@ Then modify the file location and parameters below in the Parameters section. */
 #define DIMENSION				4000
 #define FULL_DIMENSION				16609143
 #define NUMBASE					340000
-#define MAX_RESERVOIR_RAND			35000
 #define NUMQUERY				10000
 #define TOPK					128
 #define AVAILABLE_TOPK				1024
@@ -65,9 +63,9 @@ Then modify the file location and parameters below in the Parameters section. */
 #define AVAILABLE_TOPK				1024
 #define TOPK					128
 
-#define BASEFILE	        "../Data/Webspam/webspam_data"
-#define GTRUTHINDICE	        "../Data/Webspam/webspam_indices"
-#define GTRUTHDIST		"../Data/Webspam/webspam_distances"
+#define BASEFILE	        "../Data/Webspam/data"
+#define GTRUTHINDICE	        "../Data/Webspam/indices"
+#define GTRUTHDIST		"../Data/Webspam/distances"
 
 #elif defined DNA_FULL_GENOME
 
@@ -77,24 +75,33 @@ Then modify the file location and parameters below in the Parameters section. */
 
 #define K					1
 
-#define NUMBASE					127219
+#define NUMBASE					117219
 #define NUMQUERY				10000
 #define TOPK					128
 #define AVAILABLE_TOPK				128
 
-#define BASEFILE	        "../Data/Genomes/genomes_data"
-#define GTRUTHINDICE	        "../Data/Genomes/genomes_indices"
-#define GTRUTHDIST		"../Data/Genomes/genomes_distances"
+#define BASEFILE	        "../Data/Genomes/data"
+#define GTRUTHINDICE	        "../Data/Genomes/indices"
+#define GTRUTHDIST		"../Data/Genomes/distances"
+
+#elif defined DNA_FULL_PROTEOME
+
+#define SETDATASET
+
+#define NUMHASHBATCH				50
+
+#define K					1
+
+#define NUMBASE					116373
+#define NUMQUERY				10000
+#define TOPK					128
+#define AVAILABLE_TOPK				128
+
+#define BASEFILE	        "../Data/Proteomes/data"
+#define GTRUTHINDICE	        "../Data/Proteomes/indices"
+#define GTRUTHDIST		"../Data/Proteomes/distances"
 #endif
 
-void benchmark_kselect();
-void benchmark_naiverp(int RANDPROJ_COMPRESS);
-void benchmark_paragrid();
-void benchmark_bruteforce();
-void benchmark_ava();
-void benchmark_friendster_quality();
 void benchmark_sparse();
-void benchmark_dense();
-void benchmark_doph(int TEST_DOPH);
-void benchmark_smartrp(int SMART_RP);
+
 

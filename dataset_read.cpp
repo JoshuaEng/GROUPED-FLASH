@@ -380,7 +380,7 @@ void readSet(std::istream &data_file, uint size, int **sparse_indice, float **sp
 	vector<size_t> row = vector<size_t>(0);
 	size_t index;
 	size_t i = 0;
-	while (load_vector_from_stream_int(data_file, row, &index) && data->size() < size) {
+	while (load_vector_from_stream_int(data_file, row, &index) && i < size) {
 		data->at(i) = row;
 		i++;
 		array_length += row.size();
@@ -393,7 +393,7 @@ void readSet(std::istream &data_file, uint size, int **sparse_indice, float **sp
     (*sparse_marker)[i] = current_position;
     for (size_t j = 0; j < data->at(i).size(); ++j) {
       (*sparse_dist)[current_position] = 1;
-      (*sparse_indice)[current_position] = data->at(i).at(j);
+      (*sparse_indice)[current_position] = (data->at(i).at(j) % (((size_t)1)<<31));
       ++current_position;
     }
   }
@@ -412,12 +412,12 @@ bool load_vector_from_stream_int(std::istream &in, std::vector<size_t> &vec,
 
   size_t i = 0;
   bool ret = false;
-  while (getline(ss, buff, ',')) {
+  while (getline(ss, buff, ' ')) {
     ret = true;
     if (i != 0) {
-      vec.push_back(stoi(buff));
+      vec.push_back(stoul(buff));
     } else {
-      *first = stoi(buff);
+      *first = stoul(buff);
     }
     ++i;
   }
@@ -437,12 +437,12 @@ bool load_vector_from_stream_float(std::istream &in, std::vector<float> &vec,
 
   size_t i = 0;
   bool ret = false;
-  while (getline(ss, buff, ',')) {
+  while (getline(ss, buff, ' ')) {
     ret = true;
     if (i != 0) {
       vec.push_back(stof(buff));
     } else {
-      *first = stoi(buff);
+      *first = stoul(buff);
     }
     ++i;
   }
