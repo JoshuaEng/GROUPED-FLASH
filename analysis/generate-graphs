@@ -3,13 +3,25 @@ python3 recall_precision.py 10 ../their_webspam_cached2.txt ../my_webspam_cached
 python3 recall_precision.py 1 ../their_webspam_cached2.txt ../my_webspam_cached2.txt 2 -save
 python3 recall_precision.py 10 ../their_url_cached2.txt ../my_url_cached2.txt 2 -save
 python3 recall_precision.py 1 ../their_url_cached2.txt ../my_url_cached2.txt 2 -save
+python3 recall_precision.py 10 ../their_genomes_cached2.txt ../my_genomes_cached2.txt 2 -save
+python3 recall_precision.py 1 ../their_genomes_cached2.txt ../my_genomes_cached2.txt 2 -save
+python3 recall_precision.py 10 ../their_proteomes_cached2.txt ../my_proteomes_cached2.txt 2 -save
+python3 recall_precision.py 1 ../their_genomes_cached2.txt ../my_proteomes_cached2.txt 2 -save
 
 python3 recall_precision.py 10 ../their_webspam_cached2.txt ../my_webspam_cached2.txt 20 -save
 python3 recall_precision.py 1 ../their_webspam_cached2.txt ../my_webspam_cached2.txt 20 -save
 python3 recall_precision.py 10 ../their_url_cached2.txt ../my_url_cached2.txt 20 -save
 python3 recall_precision.py 1 ../their_url_cached2.txt ../my_url_cached2.txt 20 -save
+python3 recall_precision.py 10 ../their_genomes_cached2.txt ../my_genomes_cached2.txt 20 -save
+python3 recall_precision.py 1 ../their_genomes_cached2.txt ../my_genomes_cached2.txt 20 -save
+python3 recall_precision.py 10 ../their_proteomes_cached2.txt ../my_proteomes_cached2.txt 20 -save
+python3 recall_precision.py 1 ../their_genomes_cached2.txt ../my_proteomes_cached2.txt 20 -save
 
 python3 recall_precision.py 10 ../their_webspam_cached2.txt ../my_webspam_cached2.txt 200 -save
 python3 recall_precision.py 1 ../their_webspam_cached2.txt ../my_webspam_cached2.txt 200 -save
 python3 recall_precision.py 10 ../their_url_cached2.txt ../my_url_cached2.txt 200 -save
 python3 recall_precision.py 1 ../their_url_cached2.txt ../my_url_cached2.txt 200 -save
+python3 recall_precision.py 10 ../their_genomes_cached2.txt ../my_genomes_cached2.txt 200 -save
+python3 recall_precision.py 1 ../their_genomes_cached2.txt ../my_genomes_cached2.txt 200 -save
+python3 recall_precision.py 10 ../their_proteomes_cached2.txt ../my_proteomes_cached2.txt 200 -save
+python3 recall_precision.py 1 ../their_genomes_cached2.txt ../my_proteomes_cached2.txt 200 -save
