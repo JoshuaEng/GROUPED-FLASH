@@ -13,7 +13,7 @@ compare_by = args.compare_by
 maximum_time_per_query = int(args.max_time)
 num_queries = 10000
 dataset = args.my_file.split("_")[1]
-size_map = {"url": 2376130, "webspam": 330000}
+size_map = {"url": 2376130, "webspam": 330000, "genomes": 117219, "proteomes": 116373}
 num_points = size_map[dataset]
 
 def parse_file(file_name, line_hint, size_func):   
