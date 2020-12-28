@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 #include "dataset.h"
+#include "HybridCNNReader.h"
+
 
 using namespace std;
 
@@ -311,6 +313,69 @@ void bvecs_read(const std::string &file, int offset, int readsize, float *out) {
   }
   myFile.close();
 }
+
+/* Functions for reading and parsing query file of the YFCC100M dataset. */
+
+void fvecs_yfcc_query_read(const std::string& file, int dim, int readsize, vector<float>* out) {
+	float fvs = 0;
+
+	std::ifstream myFile(file, std::ios::in | std::ios::binary);
+	std::ofstream tmpFile("flash_read_queries.txt", std::ios::out);
+
+	if (!myFile) {
+		printf("Error opening query file for read...\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (!tmpFile) {
+		printf("Error opening query file for write... \n");
+		exit(EXIT_FAILURE);
+	}
+
+  for (int i = 0; i < readsize; i++) {
+    for (int j = 0; j < dim; j++) {
+      if (!myFile.good() || myFile.eof() || myFile.fail() || myFile.bad()) {
+        printf("Error occured while reading query file. Aborting.. \n");
+        exit(EXIT_FAILURE);
+      }
+      myFile >> fvs;
+      out->push_back(fvs);
+      tmpFile << fvs << " ";
+    }
+    tmpFile << std::endl;
+	}
+
+	myFile.close();
+	tmpFile.close();
+}
+
+/* Functions for reading and parsing the YFCC100M dataset. */
+
+void fvecs_yfcc_read(const std::string& file_prefix, int offset, int readsize, vector<float>* out) {
+    int d = 4096;
+    int batch = 1000;
+
+    float* fvs = new float[d * batch];
+    long* ids  = new long[batch];        // not used
+
+    if (offset != 0) {
+        printf("offset needs to be 0 for YFCC100M... \n");
+        exit(EXIT_FAILURE);
+    }
+
+    BinaryReader reader(file_prefix);
+
+    int features_read = 0;
+
+    while (features_read < readsize) {
+        reader.read(batch, fvs, d*batch, ids, batch);
+        //last = std::copy(fvs, (fvs + (d * batch)), last);
+	      out->insert(out->end(), fvs, fvs + batch * d);
+      	features_read += batch;
+    }
+
+}
+
 
 /*
 For reading the indices of the groudtruths.

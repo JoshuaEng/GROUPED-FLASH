@@ -10,6 +10,8 @@ Then modify the file location and parameters below in the Parameters section. */
 // #define URL
 // #define WEBSPAM_TRI
 // #define DNA_FULL_GENOME
+// #define PROMETHION_SHORT
+// #define YFCC
 #define DNA_FULL_PROTEOME
 
 #define USE_FLINNG false
@@ -101,6 +103,27 @@ Then modify the file location and parameters below in the Parameters section. */
 #define BASEFILE	        "../Data/Proteomes/data"
 #define GTRUTHINDICE	        "../Data/Proteomes/indices"
 #define GTRUTHDIST		"../Data/Proteomes/distances"
+
+
+#elif defined PROMETHION_SHORT
+
+#define SETDATASET
+
+#define NUMHASHBATCH				200
+
+#define K					1
+
+#define NUMBASE					3696341
+#define NUMQUERY				10000
+#define TOPK					128
+#define AVAILABLE_TOPK				128
+
+#define BASEFILE	        "../Data/Promethion/data"
+#define GTRUTHINDICE	        "../Data/Promethion/indices"
+#define GTRUTHDIST		"../Data/Promethion/distances"
+
+#elif defined YFCC 
+
 #endif
 
 void benchmark_sparse();
