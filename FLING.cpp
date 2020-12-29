@@ -42,7 +42,7 @@ FLING::FLING(uint row_count, uint blooms_per_row, uint *hashes, uint num_hashes_
   this->num_hashes_generated = num_hashes_generated;
   this->internal_hash_bits = hash_bits;
   this->internal_hash_length = 1 << internal_hash_bits;
-  this->rambo_array = new vector<uint16_t>[hash_repeats * internal_hash_length];
+  this->rambo_array = new vector<uint32_t>[hash_repeats * internal_hash_length];
   this->hash_function = hash_family;
 
   // Create meta rambo

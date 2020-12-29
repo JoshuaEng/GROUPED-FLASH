@@ -10,11 +10,11 @@ Then modify the file location and parameters below in the Parameters section. */
 // #define URL
 // #define WEBSPAM_TRI
 // #define DNA_FULL_GENOME
-// #define PROMETHION_SHORT
+#define PROMETHION_SHORT
 // #define YFCC
-#define DNA_FULL_PROTEOME
+// #define DNA_FULL_PROTEOME
 
-#define USE_FLINNG false
+#define USE_FLINNG true
 
 /* Parameters. */
 #if defined URL

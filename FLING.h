@@ -20,7 +20,7 @@ private:
   uint internal_hash_length;
   uint internal_hash_bits;
   uint hash_size;
-  std::vector<uint16_t> *rambo_array;
+  std::vector<uint32_t> *rambo_array;
   std::vector<uint> *meta_rambo;
   uint *hashes;
   uint num_hashes_generated;

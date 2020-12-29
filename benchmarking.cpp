@@ -183,7 +183,7 @@ void benchmark_sparse() {
       std::cout << "Initializing query hashes, array size " << REPS * NUMQUERY << endl;
 
       for (size_t R = 2; R < 6; R++) {
-        for (size_t B = 2000; B * R <= 1 << 16; B *= 2) {
+        for (size_t B = 2000; B * R <= 1 << 19; B *= 2) {
           std::cout << "STATS_GROUPS: " << R << " " << B << " " << RANGE << " "
                     << REPS << std::endl;
           do_group(B, R, REPS, RANGE, hashes, REPS, gtruth_indice,

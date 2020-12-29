@@ -22,8 +22,5 @@
 using namespace std;
 
 int main() {
-	// benchmark_sparse();
-	HybridCNNReader reader = HybridCNNReader();
-	reader.convert_to_bin("/home/jae4/YFCC100M_hybridCNN_gmean_fc6_20.txt.gz", "/home/jae4/YFCC100M_hybridCNN_gmean_fc6_20.bin");
-	return 0;
+	benchmark_sparse();
 }
