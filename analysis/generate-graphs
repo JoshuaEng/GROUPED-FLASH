@@ -1,27 +1,33 @@
 #!/bin/bash
-python3 recall_precision.py 10 ../their_webspam_cached2.txt ../my_webspam_cached2.txt 2 -save
-python3 recall_precision.py 1 ../their_webspam_cached2.txt ../my_webspam_cached2.txt 2 -save
-python3 recall_precision.py 10 ../their_url_cached2.txt ../my_url_cached2.txt 2 -save
-python3 recall_precision.py 1 ../their_url_cached2.txt ../my_url_cached2.txt 2 -save
-python3 recall_precision.py 10 ../their_genomes_cached2.txt ../my_genomes_cached2.txt 2 -save
-python3 recall_precision.py 1 ../their_genomes_cached2.txt ../my_genomes_cached2.txt 2 -save
-python3 recall_precision.py 10 ../their_proteomes_cached2.txt ../my_proteomes_cached2.txt 2 -save
-python3 recall_precision.py 1 ../their_genomes_cached2.txt ../my_proteomes_cached2.txt 2 -save
+declare -a datasets=("url" "genomes" "proteomes" "promethion")
+# declare -a datasets=("webspam" "url" "genomes" "proteomes" "promethion")
 
-python3 recall_precision.py 10 ../their_webspam_cached2.txt ../my_webspam_cached2.txt 20 -save
-python3 recall_precision.py 1 ../their_webspam_cached2.txt ../my_webspam_cached2.txt 20 -save
-python3 recall_precision.py 10 ../their_url_cached2.txt ../my_url_cached2.txt 20 -save
-python3 recall_precision.py 1 ../their_url_cached2.txt ../my_url_cached2.txt 20 -save
-python3 recall_precision.py 10 ../their_genomes_cached2.txt ../my_genomes_cached2.txt 20 -save
-python3 recall_precision.py 1 ../their_genomes_cached2.txt ../my_genomes_cached2.txt 20 -save
-python3 recall_precision.py 10 ../their_proteomes_cached2.txt ../my_proteomes_cached2.txt 20 -save
-python3 recall_precision.py 1 ../their_genomes_cached2.txt ../my_proteomes_cached2.txt 20 -save
 
-python3 recall_precision.py 10 ../their_webspam_cached2.txt ../my_webspam_cached2.txt 200 -save
-python3 recall_precision.py 1 ../their_webspam_cached2.txt ../my_webspam_cached2.txt 200 -save
-python3 recall_precision.py 10 ../their_url_cached2.txt ../my_url_cached2.txt 200 -save
-python3 recall_precision.py 1 ../their_url_cached2.txt ../my_url_cached2.txt 200 -save
-python3 recall_precision.py 10 ../their_genomes_cached2.txt ../my_genomes_cached2.txt 200 -save
-python3 recall_precision.py 1 ../their_genomes_cached2.txt ../my_genomes_cached2.txt 200 -save
-python3 recall_precision.py 10 ../their_proteomes_cached2.txt ../my_proteomes_cached2.txt 200 -save
-python3 recall_precision.py 1 ../their_genomes_cached2.txt ../my_proteomes_cached2.txt 200 -save
+declare -a recall_precision_times=("2" "20" "200")
+declare -a recall_precision_neighbours=("1" "10")
+
+declare -a recall_time_cutoffs=("0" "0.2")
+declare -a recall_time_comparebys=("R1@1" "R1@10" "R1@100" "R10@10" "R10@100")
+
+for dataset in "${datasets[@]}"
+do
+  my_file=$(printf "../my_%s_cached2.txt" "$dataset")
+  their_file=$(printf "../their_%s_cached2.txt" "$dataset")
+  
+  for time in "${recall_precision_times[@]}"
+  do
+    for neighbours in "${recall_precision_neighbours[@]}"
+    do
+      python3 recall_precision.py "$neighbours" "$their_file" "$my_file" "$time" -save
+    done
+  done
+
+  for cutoff in "${recall_time_cutoffs[@]}"
+  do
+    for compareby in "${recall_time_comparebys[@]}"
+    do
+      python3 recall_time.py "$compareby" "$their_file" "$my_file" "$cutoff" -save
+    done
+  done
+
+done
