@@ -1,6 +1,5 @@
 #!/bin/bash
-declare -a datasets=("url" "genomes" "proteomes" "promethion")
-# declare -a datasets=("webspam" "url" "genomes" "proteomes" "promethion")
+declare -a datasets=("webspam" "url" "genomes" "proteomes" "promethion")
 
 
 declare -a recall_precision_times=("2" "20" "200")
