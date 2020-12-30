@@ -5,3 +5,4 @@ annotate-result
 perf.*
 *.txt
 *.data
+*.out
