@@ -47,6 +47,7 @@ private:
 
 	/* Signed random projection implementations. */
 	void srp_openmp_sparse(unsigned int *hashes, int *dataIdx, float *dataVal, int *dataMarker, int numInputEntries);
+	void srp_openmp_dense_data(unsigned int *hashesToFill, unsigned int *indicesToFill, float *dataVal, int numInputEntries);
 
 	/* Optimal Densified Minhash */
 	unsigned int getRandDoubleHash(int binid, int count);

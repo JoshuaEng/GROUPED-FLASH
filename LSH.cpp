@@ -13,7 +13,12 @@ void LSH::getHash(unsigned int *hashIndices, unsigned int *probeDataIdx, int *da
 		delete[] hashes;
 	}
 	else if (_hashType == 2) {
+		// Doph on 
 		getOptimalMinhash(hashIndices, probeDataIdx, dataIdx, dataMarker, numInputEntries, numProbes);
+	}
+	else if (_hashType == 3) {
+		// Sparse srp hashes on dense data
+		srp_openmp_dense_data(hashIndices, probeDataIdx, dataVal, numInputEntries);
 	}
 
 #if defined DEBUG

@@ -16,7 +16,7 @@
 #include <vector>
 #include <algorithm>
 #include "FrequentItems.h"
-#include "HybridCNNReader.h"
+#include "dataset.h"
 
 #include <iostream>
 using namespace std;

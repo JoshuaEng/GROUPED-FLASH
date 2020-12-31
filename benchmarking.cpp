@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-void do_group(size_t B, size_t R, size_t REPS, size_t RANGE, uint *hashes,
+void do_group(size_t B, size_t R, size_t REPS, size_t range, uint *hashes,
               uint max_reps, unsigned int *gtruth_indice, float *gtruth_dist,
               int *query_sparse_indice, float *query_sparse_val, int *query_sparse_marker, 
               LSH *hash_family) {
@@ -30,7 +30,7 @@ void do_group(size_t B, size_t R, size_t REPS, size_t RANGE, uint *hashes,
   float etime_0;
 
   // Create index
-  FLING *fling = new FLING(R, B, hashes, max_reps, hash_family, RANGE, REPS, NUMBASE);
+  FLING *fling = new FLING(R, B, hashes, max_reps, hash_family, range, REPS, NUMBASE);
   fling->finalize_construction();
 
   // Do queries
@@ -38,7 +38,12 @@ void do_group(size_t B, size_t R, size_t REPS, size_t RANGE, uint *hashes,
   begin = Clock::now();
   for (uint i = 0; i < NUMQUERY; i++) {
     uint32_t recall_buffer[TOPK];
+// TODO: This compiler directive is ugly. Also change to doing all hashing at first, make hashing not parallel
+#ifdef DENSEDATASET
+    fling->query(query_sparse_indice, query_sparse_val  + DIMENSION * i, query_sparse_marker, TOPK, recall_buffer);
+#else
     fling->query(query_sparse_indice, query_sparse_val, query_sparse_marker + i, TOPK, recall_buffer);
+#endif
     for (size_t j = 0; j < TOPK; j++) {
       queryOutputs[TOPK * i + j] = recall_buffer[j];
     }
@@ -55,7 +60,7 @@ void do_group(size_t B, size_t R, size_t REPS, size_t RANGE, uint *hashes,
 }
 
 
-void do_normal(size_t RESERVOIR, size_t REPS, size_t RANGE, uint *hashes, uint *indices, 
+void do_normal(size_t RESERVOIR, size_t REPS, size_t range, uint *hashes, uint *indices, 
               uint max_reps, unsigned int *gtruth_indice, float *gtruth_dist,
               int *query_sparse_indice, float *query_sparse_val, int *query_sparse_marker, 
               LSH *hashFamily) {
@@ -69,7 +74,7 @@ void do_normal(size_t RESERVOIR, size_t REPS, size_t RANGE, uint *hashes, uint *
   // Dimension not used so just pass in -1
   // Initialize hashtables and other datastructures.
   LSHReservoirSampler *myReservoir = new LSHReservoirSampler(
-      hashFamily, RANGE, REPS, RESERVOIR, -1, RANGE, NUMBASE, 1, 1, 1); 
+      hashFamily, RANGE, REPS, RESERVOIR, -1, range, NUMBASE, 1, 1, 1); 
 
 
   for (size_t start = 0; start < NUMBASE;) {
@@ -130,7 +135,6 @@ void benchmark_sparse() {
 
   // Generate hashes with maximum reps
   cout << "Starting total hash generation" << endl;
-  auto RANGE = 17;
 
   cout << "Starting index building and query grid parameter test" << endl;
   unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
@@ -139,7 +143,12 @@ void benchmark_sparse() {
     for (size_t REPS = 6; REPS <= 3050; REPS *= 1.5) {
 
       std::cout << "Initializing data hashes, array size " << REPS * NUMBASE << endl;
-      LSH *hashFamily = new LSH(2, K, REPS, RANGE); // Initialize LSH hash.
+      // Initialize LSH hash.
+      #ifdef DENSEDATASET
+        LSH *hashFamily = new LSH(3, RANGE, REPS, DIMENSION, 40); 
+      #else
+        LSH *hashFamily = new LSH(2, K, REPS, RANGE); 
+      #endif
       unsigned int *hashes = new unsigned int[REPS * NUMBASE];
       unsigned int *indices = new unsigned int[REPS * NUMBASE];
       hashFamily->getHash(hashes, indices, 
@@ -168,10 +177,14 @@ void benchmark_sparse() {
     }
   } else {
     std::cout << "Using groups!" << std::endl;
-    for (size_t REPS = 20; REPS <= 2560; REPS *= 2) {
+    for (size_t REPS = 100; REPS <= 800; REPS *= 2) {
 
       std::cout << "Initializing data hashes, array size " << REPS * NUMBASE << endl;
-      LSH *hashFamily = new LSH(2, K, REPS, RANGE); // Initialize LSH hash.
+      #ifdef DENSEDATASET
+        LSH *hashFamily = new LSH(3, RANGE, REPS, DIMENSION, 40); 
+      #else
+        LSH *hashFamily = new LSH(2, K, REPS, RANGE); 
+      #endif
       unsigned int *hashes =
           new unsigned int[REPS * NUMBASE];
       unsigned int *indices =
@@ -183,7 +196,7 @@ void benchmark_sparse() {
       std::cout << "Initializing query hashes, array size " << REPS * NUMQUERY << endl;
 
       for (size_t R = 2; R < 6; R++) {
-        for (size_t B = 2000; B * R <= 1 << 19; B *= 2) {
+        for (size_t B = 1 << 17; B * R <= 1 << 24; B *= 2) {
           std::cout << "STATS_GROUPS: " << R << " " << B << " " << RANGE << " "
                     << REPS << std::endl;
           do_group(B, R, REPS, RANGE, hashes, REPS, gtruth_indice,
@@ -192,9 +205,9 @@ void benchmark_sparse() {
         }
       }
     
-    delete[] hashes;
-    delete[] indices;
-    delete hashFamily;
+      delete[] hashes;
+      delete[] indices;
+      delete hashFamily;
     }
   }
 

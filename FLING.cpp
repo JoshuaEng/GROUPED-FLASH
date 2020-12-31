@@ -115,8 +115,13 @@ void FLING::query(int *data_ids, float *data_vals, int *data_marker,
   uint hashes[hash_repeats];
   uint indices[hash_repeats]; // Should be all one value
 
+  // cout << data_vals[0] << endl;
   hash_function->getHash(hashes, indices, data_ids, data_vals, data_marker, 1,
                          1);
+  // for (int i = 0; i < hash_repeats; i++) {
+  //   cout << hashes[i] << " ";
+  // }
+  // cout << endl;
 
   // Get observations, ~80%!
   vector<uint> counts(num_bins, 0);
@@ -147,7 +152,7 @@ void FLING::query(int *data_ids, float *data_vals, int *data_marker,
         if (++num_counts[point] == row_count) {
           query_output[num_found] = point;
           if (++num_found == query_goal) {
-            // cout << "Using threshhold " << rep << endl;
+            cout << "Using threshhold " << rep << endl;
             return;
           }
         }

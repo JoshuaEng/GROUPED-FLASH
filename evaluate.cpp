@@ -108,11 +108,16 @@ void r10Metric(unsigned int *queryOutputs, int numQueries, int topk,
 		unordered_set<unsigned int> topGtruths(groundTruthIdx + i * availableTopk, groundTruthIdx + i * availableTopk + 10);
 		for (int denominator = 10; denominator <= topk; denominator++) {
 			unordered_set<unsigned int> topOutputs(queryOutputs + i * topk, queryOutputs + i * topk + denominator);
+			uint local_count = 0;
 			for (const auto& elem : topGtruths) {
 				if (topOutputs.find(elem) != topOutputs.end()) { // If elem is found in the intersection.
+					local_count++;
 					good_counts[denominator - 10]++;
 				}
 			}
+			// if (denominator == 100) {
+			// 	cout  << i << " " << local_count << endl;
+			// }
 		}
 	}
 

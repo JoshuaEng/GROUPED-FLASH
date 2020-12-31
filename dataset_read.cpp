@@ -18,13 +18,24 @@ bool load_vector_from_stream_float(std::istream &in, std::vector<float> &vec,
                                    size_t *first);
 void readSet(std::istream &data_file, uint size, int **sparse_indice, float **sparse_dist, int **sparse_marker);
 																	
+void fvecs_yfcc_read_data(const std::string& file_prefix, int offset, int readsize, float* start);   
+
+void fvecs_yfcc_read_queries(const std::string& file_prefix, int offset, int readsize, float* start);                         
 
 void readDataAndQueries(string baseFile, uint numQuery, uint numBase, 
                      int **sparse_data_indice, float **sparse_data_val, int **sparse_data_marker,
                      int **sparse_query_indice, float **sparse_query_val, int **sparse_query_marker) {
 		
 	ifstream data_file(baseFile);
-#ifdef SETDATASET
+#if defined(YFCC)
+  *sparse_query_val = new float[(size_t)(NUMQUERY) * DIMENSION];
+	fvecs_yfcc_read_queries(QUERYFILE, DIMENSION, NUMQUERY, *sparse_query_val);
+  for (int i = 0; i < NUMQUERY; i++) {
+    cout << ((*sparse_query_val) + DIMENSION * i)[0] << endl;
+  }
+  *sparse_data_val = new float[(size_t)(NUMBASE) * DIMENSION];
+	fvecs_yfcc_read_data(BASEFILE, 0, NUMBASE, *sparse_data_val);
+#elif defined(SETDATASET)
 	readSet(data_file, numQuery, sparse_query_indice, sparse_query_val, sparse_query_marker);
 	readSet(data_file, numBase, sparse_data_indice, sparse_data_val, sparse_data_marker);
 #elif defined(SPARSEDATASET)
@@ -314,46 +325,13 @@ void bvecs_read(const std::string &file, int offset, int readsize, float *out) {
   myFile.close();
 }
 
-/* Functions for reading and parsing query file of the YFCC100M dataset. */
-
-void fvecs_yfcc_query_read(const std::string& file, int dim, int readsize, vector<float>* out) {
-	float fvs = 0;
-
-	std::ifstream myFile(file, std::ios::in | std::ios::binary);
-	std::ofstream tmpFile("flash_read_queries.txt", std::ios::out);
-
-	if (!myFile) {
-		printf("Error opening query file for read...\n");
-		exit(EXIT_FAILURE);
-	}
-
-	if (!tmpFile) {
-		printf("Error opening query file for write... \n");
-		exit(EXIT_FAILURE);
-	}
-
-  for (int i = 0; i < readsize; i++) {
-    for (int j = 0; j < dim; j++) {
-      if (!myFile.good() || myFile.eof() || myFile.fail() || myFile.bad()) {
-        printf("Error occured while reading query file. Aborting.. \n");
-        exit(EXIT_FAILURE);
-      }
-      myFile >> fvs;
-      out->push_back(fvs);
-      tmpFile << fvs << " ";
-    }
-    tmpFile << std::endl;
-	}
-
-	myFile.close();
-	tmpFile.close();
-}
 
 /* Functions for reading and parsing the YFCC100M dataset. */
 
-void fvecs_yfcc_read(const std::string& file_prefix, int offset, int readsize, vector<float>* out) {
+void fvecs_yfcc_read_data(const std::string& file_prefix, int offset, int readsize, float* start) {
     int d = 4096;
     int batch = 1000;
+    size_t index = 0;
 
     float* fvs = new float[d * batch];
     long* ids  = new long[batch];        // not used
@@ -365,14 +343,33 @@ void fvecs_yfcc_read(const std::string& file_prefix, int offset, int readsize, v
 
     BinaryReader reader(file_prefix);
 
-    int features_read = 0;
+    size_t features_read = 0;
 
     while (features_read < readsize) {
         reader.read(batch, fvs, d*batch, ids, batch);
-        //last = std::copy(fvs, (fvs + (d * batch)), last);
-	      out->insert(out->end(), fvs, fvs + batch * d);
+        for (size_t i = 0; i < batch * d; i++) {
+          start[index + i] = fvs[i];
+        }
+        index += batch * d;
       	features_read += batch;
     }
+
+}
+
+void fvecs_yfcc_read_queries(const std::string& file, int dim, int readsize, float* out) {
+  ifstream in(file);
+  string line;
+  for (int line_num = 0; line_num < readsize; line_num++) {
+    getline(in, line);
+    stringstream ss(line);
+    string buff;
+    for (int d = 0; d < dim; d++){
+      getline(ss, buff, ' ');
+      out[line_num * dim + d] = stof(buff);
+    }
+  }
+  // partly courtesy of:
+  // https://stackoverflow.com/questions/1894886/parsing-a-comma-delimited-stdstring
 
 }
 

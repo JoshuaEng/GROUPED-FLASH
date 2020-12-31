@@ -1,4 +1,5 @@
 #include "LSH.h"
+#include <assert.h>     /* assert */
 
 #ifndef INT_MAX
 #define INT_MAX 0xffffffff
@@ -156,4 +157,37 @@ void LSH::srp_openmp_sparse(unsigned int *hashes, int *dataIdx, float *dataVal, 
 			}
 		}
 	}
+}
+
+void LSH::srp_openmp_dense_data(unsigned int *hashesToFill, unsigned int *indicesToFill, float *dataVal, int numInputEntries) {
+
+#pragma omp parallel for
+	for (int inputIdx = 0; inputIdx < numInputEntries; inputIdx++) {
+   		for (int rep = 0; rep < _numTables; rep++) {
+			uint hash = 0;
+			for (int bit = 0; bit < _rangePow; bit++) {
+				double s = 0;
+				for (size_t j = 0; j < _samSize; j++) {
+					uint index = rep * _rangePow * _samSize + bit * _samSize + j;
+					uint location = _indices[index];
+					// assert(location < _dimension);
+					double v = dataVal[_dimension * inputIdx + location];
+					if (_randBits[index] >= 0) {
+						s += v;
+					} else {
+						s -= v;
+					}
+				}
+				hash += (s >= 0 ? 0 : 1) << bit;
+			}
+			hashesToFill[hashIndicesOutputIdx(L, 1, numInputEntries, inputIdx, 0, rep)] = hash;
+			indicesToFill[hashIndicesOutputIdx(L, 1, numInputEntries, inputIdx, 0, rep)] = inputIdx;
+			if (inputIdx == 247049) {
+				std::cout << hash << " ";
+			}
+		}
+		if (inputIdx == 247049) {
+			std::cout << std::endl;
+		}
+    	}
 }
