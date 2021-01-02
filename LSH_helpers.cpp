@@ -182,12 +182,12 @@ void LSH::srp_openmp_dense_data(unsigned int *hashesToFill, unsigned int *indice
 			}
 			hashesToFill[hashIndicesOutputIdx(L, 1, numInputEntries, inputIdx, 0, rep)] = hash;
 			indicesToFill[hashIndicesOutputIdx(L, 1, numInputEntries, inputIdx, 0, rep)] = inputIdx;
-			if (inputIdx == 247049) {
-				std::cout << hash << " ";
-			}
+			// if (inputIdx == 111250) {
+			// 	std::cout << hash << " ";
+			// }
 		}
-		if (inputIdx == 247049) {
-			std::cout << std::endl;
-		}
+		// if (inputIdx == 111250) {
+		//	std::cout << std::endl;
+		// }
     	}
 }

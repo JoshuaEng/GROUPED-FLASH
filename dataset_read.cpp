@@ -8,6 +8,8 @@
 #include <vector>
 #include "dataset.h"
 #include "HybridCNNReader.h"
+#include <math.h>       /* sqrt */
+
 
 
 using namespace std;
@@ -30,9 +32,9 @@ void readDataAndQueries(string baseFile, uint numQuery, uint numBase,
 #if defined(YFCC)
   *sparse_query_val = new float[(size_t)(NUMQUERY) * DIMENSION];
 	fvecs_yfcc_read_queries(QUERYFILE, DIMENSION, NUMQUERY, *sparse_query_val);
-  for (int i = 0; i < NUMQUERY; i++) {
-    cout << ((*sparse_query_val) + DIMENSION * i)[0] << endl;
-  }
+  // for (int i = 0; i < NUMQUERY; i++) {
+  //   cout << ((*sparse_query_val) + DIMENSION * i)[0] << endl;
+  // }
   *sparse_data_val = new float[(size_t)(NUMBASE) * DIMENSION];
 	fvecs_yfcc_read_data(BASEFILE, 0, NUMBASE, *sparse_data_val);
 #elif defined(SETDATASET)
@@ -325,6 +327,64 @@ void bvecs_read(const std::string &file, int offset, int readsize, float *out) {
   myFile.close();
 }
 
+void compute_averages() {
+  cout << "Computing averages" << endl;
+  int batch = 1000;
+  float* fvs = new float[DIMENSION * batch];
+  long* ids  = new long[batch];        // not used
+
+  BinaryReader reader(BASEFILE);
+  size_t features_read = 0;
+  double totals[DIMENSION + 1] = {};
+  while (features_read < NUMBASE) {
+        size_t read = reader.read(batch, fvs, DIMENSION*batch, ids, batch);
+#pragma omp parallel for
+        for (size_t d = 0; d < DIMENSION; d++) {
+          for (size_t i = 0; i < read; i++) {
+            totals[d] += fvs[i * DIMENSION + d];
+          }
+        }
+
+
+#pragma omp parallel for
+        for (size_t i = 0; i < read; i++) {
+          double magnitude = 0;
+          for (size_t d = 0; d < DIMENSION; d++) {
+            float component = fvs[i * DIMENSION + d];
+            magnitude += component * component;
+          }
+#pragma omp critical        
+          totals[DIMENSION] = max(totals[DIMENSION], sqrt(magnitude));
+        }
+      	features_read += read;
+  }
+
+  for (size_t i = 0; i < DIMENSION; i++) {
+    totals[i] /= NUMBASE;
+  }
+
+  float averages[DIMENSION + 1];
+  for (uint i = 0; i <= DIMENSION; i++) {
+    averages[i] = totals[i];
+  }
+
+  FILE * pFile;
+  pFile = fopen (AVERAGESFILE, "wb");
+  fwrite(averages, sizeof(float), DIMENSION + 1, pFile);
+  fclose(pFile);
+}
+
+void get_averages(float *buffer) {
+  cout << "Getting averages" << endl;
+  FILE *pFile = fopen (AVERAGESFILE, "rb");
+  if (!pFile) {
+    compute_averages();
+    get_averages(buffer);
+    return;
+  }
+  fread(buffer, sizeof(float), DIMENSION + 1, pFile);
+  fclose(pFile);
+}
 
 /* Functions for reading and parsing the YFCC100M dataset. */
 
@@ -345,10 +405,13 @@ void fvecs_yfcc_read_data(const std::string& file_prefix, int offset, int readsi
 
     size_t features_read = 0;
 
+    float averages[DIMENSION + 1];
+    get_averages(averages);
     while (features_read < readsize) {
         reader.read(batch, fvs, d*batch, ids, batch);
+#pragma omp parallel for
         for (size_t i = 0; i < batch * d; i++) {
-          start[index + i] = fvs[i];
+          start[index + i] = (fvs[i] - averages[i % d]) / averages[DIMENSION];
         }
         index += batch * d;
       	features_read += batch;
@@ -359,13 +422,15 @@ void fvecs_yfcc_read_data(const std::string& file_prefix, int offset, int readsi
 void fvecs_yfcc_read_queries(const std::string& file, int dim, int readsize, float* out) {
   ifstream in(file);
   string line;
+  float averages[DIMENSION + 1];
+  get_averages(averages);
   for (int line_num = 0; line_num < readsize; line_num++) {
     getline(in, line);
     stringstream ss(line);
     string buff;
     for (int d = 0; d < dim; d++){
       getline(ss, buff, ' ');
-      out[line_num * dim + d] = stof(buff);
+      out[line_num * dim + d] = (stof(buff) - averages[d]) / averages[DIMENSION];
     }
   }
   // partly courtesy of:

@@ -126,21 +126,22 @@ Then modify the file location and parameters below in the Parameters section. */
 
 #define DENSEDATASET
 
-#define NUMBASE                              96976180
-#define NUMQUERY			        10000
-// #define NUMBASE                                 3000000
-// #define NUMQUERY				50
-#define TOPK					100
-#define AVAILABLE_TOPK				100
+// #define NUMBASE                              96976180
+// #define NUMQUERY			        10000
+#define NUMBASE                                 1000000
+#define NUMQUERY				1500
+#define TOPK					128
+#define AVAILABLE_TOPK				10
 #define NUMHASHBATCH				200
 
 #define DIMENSION				4096
-#define RANGE   				20
+#define RANGE   				12
 
 #define BASEFILE	        "/home/jae4/Data/Yffc/YFCC100M_hybridCNN_gmean_fc6_"
-#define GTRUTHINDICE	        "/home/jae4/Data/Yffc/yfcc100m_nq10000_k100_indices.txt"
+#define GTRUTHINDICE	        "/home/jae4/Data/Yffc/yfcc100m_nq10000_k100_indices_1000000.txt"
 #define GTRUTHDIST		"/home/jae4/Data/Yffc/yfcc100m_nq10000_k100_distances.txt"
 #define QUERYFILE	        "/home/jae4/Data/Yffc/yfcc100m_nq10000_queries.txt"
+#define AVERAGESFILE            "/home/jae4/GROUPED-FLASH/averages1000000.bin"
 
 #endif
 

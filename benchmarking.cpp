@@ -166,7 +166,6 @@ void benchmark_sparse() {
         }
         std::cout << "STATS_NORMAL: " << RESERVOIR << " " << RANGE << " "
                   << REPS << std::endl;
-
           do_normal(RESERVOIR, REPS, RANGE, hashes, indices, REPS, gtruth_indice,
                    gtruth_dist, sparse_query_indice, sparse_query_val, sparse_query_marker, hashFamily);
       }
@@ -177,7 +176,7 @@ void benchmark_sparse() {
     }
   } else {
     std::cout << "Using groups!" << std::endl;
-    for (size_t REPS = 100; REPS <= 800; REPS *= 2) {
+    for (size_t REPS = 500; REPS <= 800; REPS *= 2) {
 
       std::cout << "Initializing data hashes, array size " << REPS * NUMBASE << endl;
       #ifdef DENSEDATASET
@@ -196,7 +195,7 @@ void benchmark_sparse() {
       std::cout << "Initializing query hashes, array size " << REPS * NUMQUERY << endl;
 
       for (size_t R = 2; R < 6; R++) {
-        for (size_t B = 1 << 17; B * R <= 1 << 24; B *= 2) {
+        for (size_t B = 1 << 15; B * R <= 1 << 24; B *= 2) {
           std::cout << "STATS_GROUPS: " << R << " " << B << " " << RANGE << " "
                     << REPS << std::endl;
           do_group(B, R, REPS, RANGE, hashes, REPS, gtruth_indice,
