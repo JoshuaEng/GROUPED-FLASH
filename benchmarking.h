@@ -1,6 +1,9 @@
 
 #pragma once
 
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+
 /* Select a dataset below by uncommenting it.
 Then modify the file location and parameters below in the Parameters section. */
 
@@ -128,8 +131,8 @@ Then modify the file location and parameters below in the Parameters section. */
 
 // #define NUMBASE                              96976180
 // #define NUMQUERY			        10000
-#define NUMBASE                                 1000000
-#define NUMQUERY				1500
+#define NUMBASE                                 8000000
+#define NUMQUERY				10000
 #define TOPK					128
 #define AVAILABLE_TOPK				10
 #define NUMHASHBATCH				200
@@ -138,10 +141,9 @@ Then modify the file location and parameters below in the Parameters section. */
 #define RANGE   				12
 
 #define BASEFILE	        "/home/jae4/Data/Yffc/YFCC100M_hybridCNN_gmean_fc6_"
-#define GTRUTHINDICE	        "/home/jae4/Data/Yffc/yfcc100m_nq10000_k100_indices_1000000.txt"
+#define GTRUTHINDICE	        "/home/jae4/Data/Yffc/yfcc100m_nq10000_k100_indices_" STR(NUMBASE) ".txt"
 #define GTRUTHDIST		"/home/jae4/Data/Yffc/yfcc100m_nq10000_k100_distances.txt"
 #define QUERYFILE	        "/home/jae4/Data/Yffc/yfcc100m_nq10000_queries.txt"
-#define AVERAGESFILE            "/home/jae4/GROUPED-FLASH/averages1000000.bin"
 
 #endif
 

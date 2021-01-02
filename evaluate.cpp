@@ -41,7 +41,6 @@ void r1Metric(unsigned int *queryOutputs, int numQueries, int topk,
 	for (int i = 0; i < numQueries; i++) {
 
 		top_nn = groundTruthIdx[i * availableTopk];
-		cout << top_nn << endl;
 
 		for (int j = 0; j < topk; j++) { // Look for top-1 in top-k.
 

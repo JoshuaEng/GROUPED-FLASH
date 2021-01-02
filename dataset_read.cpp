@@ -27,14 +27,10 @@ void fvecs_yfcc_read_queries(const std::string& file_prefix, int offset, int rea
 void readDataAndQueries(string baseFile, uint numQuery, uint numBase, 
                      int **sparse_data_indice, float **sparse_data_val, int **sparse_data_marker,
                      int **sparse_query_indice, float **sparse_query_val, int **sparse_query_marker) {
-		
 	ifstream data_file(baseFile);
 #if defined(YFCC)
   *sparse_query_val = new float[(size_t)(NUMQUERY) * DIMENSION];
 	fvecs_yfcc_read_queries(QUERYFILE, DIMENSION, NUMQUERY, *sparse_query_val);
-  // for (int i = 0; i < NUMQUERY; i++) {
-  //   cout << ((*sparse_query_val) + DIMENSION * i)[0] << endl;
-  // }
   *sparse_data_val = new float[(size_t)(NUMBASE) * DIMENSION];
 	fvecs_yfcc_read_data(BASEFILE, 0, NUMBASE, *sparse_data_val);
 #elif defined(SETDATASET)
@@ -369,14 +365,14 @@ void compute_averages() {
   }
 
   FILE * pFile;
-  pFile = fopen (AVERAGESFILE, "wb");
+  pFile = fopen (("averages" + to_string(NUMBASE) + ".bin").c_str(), "wb");
   fwrite(averages, sizeof(float), DIMENSION + 1, pFile);
   fclose(pFile);
 }
 
 void get_averages(float *buffer) {
   cout << "Getting averages" << endl;
-  FILE *pFile = fopen (AVERAGESFILE, "rb");
+  FILE *pFile = fopen (("averages" + to_string(NUMBASE) + ".bin").c_str(), "rb");
   if (!pFile) {
     compute_averages();
     get_averages(buffer);
@@ -389,12 +385,14 @@ void get_averages(float *buffer) {
 /* Functions for reading and parsing the YFCC100M dataset. */
 
 void fvecs_yfcc_read_data(const std::string& file_prefix, int offset, int readsize, float* start) {
-    int d = 4096;
     int batch = 1000;
     size_t index = 0;
 
-    float* fvs = new float[d * batch];
+    float* fvs = new float[DIMENSION * batch];
     long* ids  = new long[batch];        // not used
+
+    float averages[DIMENSION + 1];
+    get_averages(averages);
 
     if (offset != 0) {
         printf("offset needs to be 0 for YFCC100M... \n");
@@ -404,17 +402,20 @@ void fvecs_yfcc_read_data(const std::string& file_prefix, int offset, int readsi
     BinaryReader reader(file_prefix);
 
     size_t features_read = 0;
-
-    float averages[DIMENSION + 1];
-    get_averages(averages);
     while (features_read < readsize) {
-        reader.read(batch, fvs, d*batch, ids, batch);
+        size_t read = reader.read(batch, fvs, DIMENSION * batch, ids, batch);
 #pragma omp parallel for
-        for (size_t i = 0; i < batch * d; i++) {
-          start[index + i] = (fvs[i] - averages[i % d]) / averages[DIMENSION];
+        for (size_t i = 0; i < read * DIMENSION; i++) {
+          start[index + i] = (fvs[i] - averages[i % DIMENSION]) / averages[DIMENSION];
         }
-        index += batch * d;
-      	features_read += batch;
+        if (features_read == 1111000) {
+          for (size_t i = 0; i < 10; i++) {
+            cout << fvs[250 * DIMENSION + i] << " ";
+          }
+          cout << endl;
+        }
+        index += read * DIMENSION;
+      	features_read += read;
     }
 
 }

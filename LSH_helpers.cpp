@@ -162,15 +162,14 @@ void LSH::srp_openmp_sparse(unsigned int *hashes, int *dataIdx, float *dataVal, 
 void LSH::srp_openmp_dense_data(unsigned int *hashesToFill, unsigned int *indicesToFill, float *dataVal, int numInputEntries) {
 
 #pragma omp parallel for
-	for (int inputIdx = 0; inputIdx < numInputEntries; inputIdx++) {
-   		for (int rep = 0; rep < _numTables; rep++) {
-			uint hash = 0;
-			for (int bit = 0; bit < _rangePow; bit++) {
+	for (size_t inputIdx = 0; inputIdx < numInputEntries; inputIdx++) {
+   		for (size_t rep = 0; rep < _numTables; rep++) {
+			size_t hash = 0;
+			for (size_t bit = 0; bit < _rangePow; bit++) {
 				double s = 0;
 				for (size_t j = 0; j < _samSize; j++) {
-					uint index = rep * _rangePow * _samSize + bit * _samSize + j;
-					uint location = _indices[index];
-					// assert(location < _dimension);
+					size_t index = rep * _rangePow * _samSize + bit * _samSize + j;
+					size_t location = _indices[index];
 					double v = dataVal[_dimension * inputIdx + location];
 					if (_randBits[index] >= 0) {
 						s += v;

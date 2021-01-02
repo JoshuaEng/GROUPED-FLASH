@@ -35,6 +35,7 @@ void do_group(size_t B, size_t R, size_t REPS, size_t range, uint *hashes,
 
   // Do queries
   std::cout << "Querying...\n";
+  omp_set_num_threads(1);
   begin = Clock::now();
   for (uint i = 0; i < NUMQUERY; i++) {
     uint32_t recall_buffer[TOPK];
@@ -49,6 +50,8 @@ void do_group(size_t B, size_t R, size_t REPS, size_t range, uint *hashes,
     }
   }
   end = Clock::now();
+  omp_set_num_threads(20);
+
   etime_0 = (end - begin).count() / 1000000;
   std::cout << "Queried " << NUMQUERY << " datapoints, used " << etime_0
             << "ms. \n";
@@ -87,10 +90,12 @@ void do_normal(size_t RESERVOIR, size_t REPS, size_t range, uint *hashes, uint *
   }
 
   std::cout << "Querying..." << endl;
+  omp_set_num_threads(1);
   begin = Clock::now();
   myReservoir->ann(NUMQUERY, query_sparse_indice, query_sparse_val, query_sparse_marker,
                    queryOutputs, TOPK);
   end = Clock::now();
+  omp_set_num_threads(20);
   etime_0 = (end - begin).count() / 1000000;
   std::cout << "Queried " << NUMQUERY << " datapoints, used " << etime_0
             << "ms." << endl;
@@ -194,8 +199,8 @@ void benchmark_sparse() {
 
       std::cout << "Initializing query hashes, array size " << REPS * NUMQUERY << endl;
 
-      for (size_t R = 2; R < 6; R++) {
-        for (size_t B = 1 << 15; B * R <= 1 << 24; B *= 2) {
+      for (size_t R = 2; R < 5; R++) {
+        for (size_t B = 1 << 15; B * R <= 1 << 20; B *= 2) {
           std::cout << "STATS_GROUPS: " << R << " " << B << " " << RANGE << " "
                     << REPS << std::endl;
           do_group(B, R, REPS, RANGE, hashes, REPS, gtruth_indice,
