@@ -45,22 +45,34 @@ FLING::FLING(uint row_count, uint blooms_per_row, uint *hashes, uint num_hashes_
   this->rambo_array = new vector<uint32_t>[hash_repeats * internal_hash_length];
   this->hash_function = hash_family;
 
+  cout << "Getting row indices" << endl;
+  vector<vector<uint>> *row_indices_arr = new vector<vector<uint>>(num_points);
+#pragma omp parallel for
+  for (uint i = 0; i < num_points; i++) {
+    row_indices_arr->at(i) = *get_hashed_row_indices(i);
+  }
+
+  cout << "Creating meta rambo" << endl;
   // Create meta rambo
   meta_rambo = new vector<uint>[row_count * blooms_per_row];
   for (uint point = 0; point < num_points; point++) {
-    vector<uint> *hashvals = FLING::get_hashed_row_indices(point);
+    vector<uint> hashvals = row_indices_arr->at(point);
     for (uint r = 0; r < row_count; r++) {
-      meta_rambo[(*hashvals)[r] + blooms_per_row * r].push_back(point);
+      meta_rambo[hashvals.at(r) + blooms_per_row * r].push_back(point);
     }
-    delete hashvals;
   }
 
+  cout << "Sorting meta rambo" << endl;
   // Sort array entries in meta rambo
+#pragma omp parallel for  
   for (uint i = 0; i < num_bins; i++) {
     sort(meta_rambo[i].begin(), meta_rambo[i].end());
   }
 
   do_inserts();
+
+  row_indices_arr->clear();
+  delete row_indices_arr;
 }
 
 FLING::~FLING() {
@@ -73,11 +85,14 @@ FLING::~FLING() {
  */
 void FLING::do_inserts() {
 
+  cout << "Getting row indices" << endl;
   vector<vector<uint>> *row_indices_arr = new vector<vector<uint>>(num_points);
+#pragma omp parallel for
   for (uint i = 0; i < num_points; i++) {
     row_indices_arr->at(i) = *get_hashed_row_indices(i);
   }
 
+  cout << "Populating FLINNG" << endl;
 #pragma omp parallel for
   for (uint rep = 0; rep < hash_repeats; rep++) {
     for (uint index = 0; index < num_points; index++) {
@@ -102,6 +117,7 @@ void FLING::do_inserts() {
 void FLING::finalize_construction() {
 
   // Remove duplicates
+  cout << "Sorting FLINNG" << endl;
 #pragma omp parallel for
   for (uint i = 0; i < internal_hash_length * hash_repeats; i++) {
     sort(rambo_array[i].begin(), rambo_array[i].end());

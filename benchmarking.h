@@ -17,7 +17,7 @@ Then modify the file location and parameters below in the Parameters section. */
 #define YFCC
 // #define DNA_FULL_PROTEOME
 
-#define USE_FLINNG false
+#define USE_FLINNG true
 
 /* Parameters. */
 #if defined URL
@@ -129,22 +129,26 @@ Then modify the file location and parameters below in the Parameters section. */
 
 #define DENSEDATASET
 
-// #define NUMBASE                              96976180
-// #define NUMQUERY			        10000
+// #define NUMBASE                                 96970001
 #define NUMBASE                                 8000000
 #define NUMQUERY				10000
 #define TOPK					128
-#define AVAILABLE_TOPK				10
+#define AVAILABLE_TOPK				100
 #define NUMHASHBATCH				200
 #define MAXREPS                                 1600
 
 #define DIMENSION				4096
 #define RANGE   				12
 
-#define BASEFILE	        "/home/jae4/Data/Yffc/YFCC100M_hybridCNN_gmean_fc6_"
-#define GTRUTHINDICE	        "/home/jae4/Data/Yffc/yfcc100m_nq10000_k100_indices_" STR(NUMBASE) ".txt"
-#define GTRUTHDIST		"/home/jae4/Data/Yffc/yfcc100m_nq10000_k100_distances.txt"
-#define QUERYFILE	        "/home/jae4/Data/Yffc/yfcc100m_nq10000_queries.txt"
+// #define BASEFILE	        "/home/jae4/Data/Yffc/YFCC100M_hybridCNN_gmean_fc6_"
+// #define GTRUTHINDICE	        "/home/jae4/Data/Yffc/yfcc100m_nq10000_k100_indices_" STR(NUMBASE) ".txt"
+// #define GTRUTHDIST		"/home/jae4/Data/Yffc/yfcc100m_nq10000_k100_distances.txt"
+// #define QUERYFILE	        "/home/jae4/Data/Yffc/yfcc100m_nq10000_queries.txt"
+#define BASEFILE                "/scratch0/jae4/Intel/YFCC100M_hybridCNN_gmean_fc6_"
+#define GTRUTHINDICE            "/scratch0/jae4/Intel/yfcc100m_nq10000_k100_indices.txt"
+#define GTRUTHDIST              "/scratch0/jae4/Intel/yfcc100m_nq10000_k100_distances.txt"
+#define QUERYFILE               "/scratch0/jae4/Intel/yfcc100m_nq10000_queries.txt"
+
 
 #endif
 

@@ -34,7 +34,7 @@ void do_group(size_t B, size_t R, size_t REPS, size_t range, uint *hashes,
   fling->finalize_construction();
 
   // Do queries
-  std::cout << "Querying...\n";
+  cout << "Querying..." << endl;
   omp_set_num_threads(1);
   begin = Clock::now();
   for (uint i = 0; i < NUMQUERY; i++) {
@@ -129,6 +129,7 @@ void benchmark_sparse() {
   unsigned int *indices_unused;
 
   size_t chunk_size = 1000000; // For now needs to be multiple of 1000000
+  cout << NUMBASE << endl;
   for (size_t i = 0; i < (NUMBASE + chunk_size - 1) / chunk_size; i++) {
     size_t num_vectors = min(chunk_size, NUMBASE - i * chunk_size);
     cout << "Starting chunk " << i << ", contains " << num_vectors << " vectors." << endl;
@@ -209,7 +210,7 @@ void benchmark_sparse() {
     }
   } else {
     std::cout << "Using groups!" << std::endl;
-    for (size_t REPS = 400; REPS <= MAXREPS; REPS *= 2) { 
+    for (size_t REPS = 200; REPS <= MAXREPS; REPS *= 2) { 
 
       std::cout << "Initializing data hashes, array size " << REPS * NUMBASE << endl;
       // Initialize LSH hash.
@@ -228,7 +229,7 @@ void benchmark_sparse() {
 #endif
 
       for (size_t R = 2; R < 5; R++) {
-        for (size_t B = 1 << 15; B * R <= 1 << 20; B *= 2) {
+        for (size_t B = 1 << 15; B < 1 << 25; B *= 2) {
           std::cout << "STATS_GROUPS: " << R << " " << B << " " << RANGE << " "
                     << REPS << std::endl;
           do_group(B, R, REPS, RANGE, hashes, REPS, gtruth_indice,

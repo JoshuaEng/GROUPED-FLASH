@@ -329,6 +329,9 @@ void compute_averages() {
   double totals[DIMENSION + 1] = {};
   while (features_read < NUMBASE) {
         size_t read = reader.read(batch, fvs, DIMENSION*batch, ids, batch);
+	if (read == 0) {
+	  cout << features_read << endl;
+	}
 #pragma omp parallel for
         for (size_t d = 0; d < DIMENSION; d++) {
           for (size_t i = 0; i < read; i++) {
