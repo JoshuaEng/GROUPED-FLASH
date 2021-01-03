@@ -52,7 +52,7 @@ LSH::LSH(int hashType, int _K_in, int _L_in, int _rangePow_in)	{
 	std::cout << "Optimal Densified Hashing intialized ...  \n";
 }
 
-/* Constructor - SRP - Type 1. */
+/* Constructor - SRP - Type 1 and Type 3. */
 LSH::LSH(int hashType, int numHashPerFamily, int numHashFamilies, int dimension, int samFactor) {
 
 	_rangePow = numHashPerFamily,
@@ -62,6 +62,7 @@ LSH::LSH(int hashType, int numHashPerFamily, int numHashFamilies, int dimension,
 	_samFactor = samFactor;
 	_hashType = hashType;
 	_groupHashingSize = RANDPROJGROUPSIZE;
+	_numTablesToUse = _numTables;
 
 	printf("<<< LSH Parameters >>>\n");
 	std::cout << "_rangePow " << _rangePow << std::endl;

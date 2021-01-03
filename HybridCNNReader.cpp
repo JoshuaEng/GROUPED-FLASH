@@ -146,6 +146,15 @@ BinaryReader::BinaryReader(std::string prefix):
     open(filename);
 }
 
+BinaryReader::BinaryReader(int file_num, std::string prefix):
+    _prefix(prefix),
+    _file_counter(file_num),
+    _read_counter(0)
+{
+    std::string filename = _prefix + std::to_string(_file_counter) + ".bin";
+    open(filename);
+}
+
 void BinaryReader::open(std::string filename)
 {
     if (_ifs.is_open())

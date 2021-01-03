@@ -1,7 +1,7 @@
 #include "LSH.h"
 
 /* OpenMP - Sparse. */
-void LSH::getHash(unsigned int *hashIndices, unsigned int *probeDataIdx, int *dataIdx, float *dataVal, int *dataMarker, int numInputEntries, int numProbes) {
+void LSH::getHash(unsigned int *hashIndices, unsigned int *probeDataIdx, int *dataIdx, float *dataVal, int *dataMarker, int numInputEntries, int numProbes, size_t maxNumEntries, size_t offset) {
 #if defined DEBUG
 	std::cout << "[LSH::getHash]" << std::endl;
 #endif
@@ -18,12 +18,23 @@ void LSH::getHash(unsigned int *hashIndices, unsigned int *probeDataIdx, int *da
 	}
 	else if (_hashType == 3) {
 		// Sparse srp hashes on dense data
-		srp_openmp_dense_data(hashIndices, probeDataIdx, dataVal, numInputEntries);
+		// Note indices are not generated
+		srp_openmp_dense_data(hashIndices, dataVal, numInputEntries, maxNumEntries, offset, _numTablesToUse);
 	}
 
 #if defined DEBUG
 	std::cout << "[LSH::getHash] Exit. " << std::endl;
 #endif
+}
+
+void LSH::set_reps(uint reps) {
+	if (_hashType != 3) {
+		std::cout << "Set reps is not implemented for this hash type!" << std::endl;
+	}
+	if (reps > _numTables) {
+		std::cout << "Too many reps, more than the max stored" << std::endl;
+	}
+	_numTablesToUse = reps;
 }
 
 /* OpenMP - Dense. */

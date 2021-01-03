@@ -36,6 +36,7 @@ class BinaryReader {
 
 public:
     BinaryReader(std::string prefix);
+    BinaryReader(int file_num, std::string prefix);
 
     void open(std::string filename);
     int read(int vectors, float* buff, size_t buf_size,

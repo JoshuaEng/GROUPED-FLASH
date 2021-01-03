@@ -28,12 +28,7 @@ void readDataAndQueries(string baseFile, uint numQuery, uint numBase,
                      int **sparse_data_indice, float **sparse_data_val, int **sparse_data_marker,
                      int **sparse_query_indice, float **sparse_query_val, int **sparse_query_marker) {
 	ifstream data_file(baseFile);
-#if defined(YFCC)
-  *sparse_query_val = new float[(size_t)(NUMQUERY) * DIMENSION];
-	fvecs_yfcc_read_queries(QUERYFILE, DIMENSION, NUMQUERY, *sparse_query_val);
-  *sparse_data_val = new float[(size_t)(NUMBASE) * DIMENSION];
-	fvecs_yfcc_read_data(BASEFILE, 0, NUMBASE, *sparse_data_val);
-#elif defined(SETDATASET)
+#if defined(SETDATASET)
 	readSet(data_file, numQuery, sparse_query_indice, sparse_query_val, sparse_query_marker);
 	readSet(data_file, numBase, sparse_data_indice, sparse_data_val, sparse_data_marker);
 #elif defined(SPARSEDATASET)
@@ -394,12 +389,12 @@ void fvecs_yfcc_read_data(const std::string& file_prefix, int offset, int readsi
     float averages[DIMENSION + 1];
     get_averages(averages);
 
-    if (offset != 0) {
-        printf("offset needs to be 0 for YFCC100M... \n");
+    if (offset > 97 || offset < 0) {
+        printf("offset needs to be a valid file number for YFCC100M... \n");
         exit(EXIT_FAILURE);
     }
 
-    BinaryReader reader(file_prefix);
+    BinaryReader reader(offset, file_prefix);
 
     size_t features_read = 0;
     while (features_read < readsize) {
@@ -408,12 +403,12 @@ void fvecs_yfcc_read_data(const std::string& file_prefix, int offset, int readsi
         for (size_t i = 0; i < read * DIMENSION; i++) {
           start[index + i] = (fvs[i] - averages[i % DIMENSION]) / averages[DIMENSION];
         }
-        if (features_read == 1111000) {
-          for (size_t i = 0; i < 10; i++) {
-            cout << fvs[250 * DIMENSION + i] << " ";
-          }
-          cout << endl;
-        }
+        // if (features_read == 1111000) {
+        //   for (size_t i = 0; i < 10; i++) {
+        //     cout << fvs[250 * DIMENSION + i] << " ";
+        //   }
+        //   cout << endl;
+        // }
         index += read * DIMENSION;
       	features_read += read;
     }

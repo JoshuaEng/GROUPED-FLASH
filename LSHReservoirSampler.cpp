@@ -15,7 +15,7 @@ void LSHReservoirSampler::lossy_ann(int numQueryEntries, int* dataIdx, float* da
 	unsigned int* allprobsIdx = new unsigned int[_numTables * numQueryEntries * _queryProbes];
 
 	_hashFamily->getHash(allprobsHash, allprobsIdx,
-		dataIdx, dataVal, dataMarker, numQueryEntries, _queryProbes);
+		dataIdx, dataVal, dataMarker, numQueryEntries, _queryProbes, numQueryEntries, 0);
 
 	query_frequentitem_cpu_openmp(numQueryEntries, outputs, allprobsHash, k);
 
@@ -36,7 +36,7 @@ void LSHReservoirSampler::ann(int numQueryEntries, int* dataIdx, float* dataVal,
 	size_t segmentSize = (size_t)_numTables * (size_t)_queryProbes * (size_t)_reservoirSize;
 
 	_hashFamily->getHash(allprobsHash, allprobsIdx,
-		dataIdx, dataVal, dataMarker, numQueryEntries, _queryProbes);
+		dataIdx, dataVal, dataMarker, numQueryEntries, _queryProbes, numQueryEntries, 0);
 
 	unsigned int* tally = new unsigned int[(size_t)(numQueryEntries) * segmentSize];
 

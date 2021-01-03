@@ -159,11 +159,11 @@ void LSH::srp_openmp_sparse(unsigned int *hashes, int *dataIdx, float *dataVal, 
 	}
 }
 
-void LSH::srp_openmp_dense_data(unsigned int *hashesToFill, unsigned int *indicesToFill, float *dataVal, int numInputEntries) {
+void LSH::srp_openmp_dense_data(unsigned int *hashesToFill, float *dataVal, int numInputEntries, size_t maxNumEntries, size_t offset, uint numTablesToUse) {
 
 #pragma omp parallel for
 	for (size_t inputIdx = 0; inputIdx < numInputEntries; inputIdx++) {
-   		for (size_t rep = 0; rep < _numTables; rep++) {
+   		for (size_t rep = 0; rep < numTablesToUse; rep++) {
 			size_t hash = 0;
 			for (size_t bit = 0; bit < _rangePow; bit++) {
 				double s = 0;
@@ -179,14 +179,7 @@ void LSH::srp_openmp_dense_data(unsigned int *hashesToFill, unsigned int *indice
 				}
 				hash += (s >= 0 ? 0 : 1) << bit;
 			}
-			hashesToFill[hashIndicesOutputIdx(L, 1, numInputEntries, inputIdx, 0, rep)] = hash;
-			indicesToFill[hashIndicesOutputIdx(L, 1, numInputEntries, inputIdx, 0, rep)] = inputIdx;
-			// if (inputIdx == 111250) {
-			// 	std::cout << hash << " ";
-			// }
+			hashesToFill[hashIndicesOutputIdx(L, 1, maxNumEntries, offset + inputIdx, 0, rep)] = hash;
 		}
-		// if (inputIdx == 111250) {
-		//	std::cout << std::endl;
-		// }
     	}
 }

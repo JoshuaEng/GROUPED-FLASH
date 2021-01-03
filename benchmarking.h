@@ -136,6 +136,7 @@ Then modify the file location and parameters below in the Parameters section. */
 #define TOPK					128
 #define AVAILABLE_TOPK				10
 #define NUMHASHBATCH				200
+#define MAXREPS                                 1600
 
 #define DIMENSION				4096
 #define RANGE   				12

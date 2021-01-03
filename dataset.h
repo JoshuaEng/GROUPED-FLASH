@@ -18,3 +18,6 @@ void bvecs_read(const std::string& file, int offset, int readsize, float *out);
 
 void readGroundTruthInt(const std::string& file, int numQueries, int availableTopK, unsigned int *out);
 void readGroundTruthFloat(const std::string& file, int numQueries, int availableTopK, float *out);
+
+void fvecs_yfcc_read_data(const std::string& file_prefix, int offset, int readsize, float* start);
+void fvecs_yfcc_read_queries(const std::string& file, int dim, int readsize, float* out);

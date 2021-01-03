@@ -37,6 +37,7 @@ private:
 	unsigned int *_hash_b;
 	short *_randBits;
 	int *_indices;
+	unsigned int _numTablesToUse;
 
 	/* Optimal Densified Minhash. */
 	int *_randHash, _randa, _numhashes, _lognumhash, _K;
@@ -47,7 +48,7 @@ private:
 
 	/* Signed random projection implementations. */
 	void srp_openmp_sparse(unsigned int *hashes, int *dataIdx, float *dataVal, int *dataMarker, int numInputEntries);
-	void srp_openmp_dense_data(unsigned int *hashesToFill, unsigned int *indicesToFill, float *dataVal, int numInputEntries);
+	void srp_openmp_dense_data(unsigned int *hashesToFill, float *dataVal, int numInputEntries, size_t maxNumEntries, size_t offset, uint numTablesToUse);
 
 	/* Optimal Densified Minhash */
 	unsigned int getRandDoubleHash(int binid, int count);
@@ -58,6 +59,8 @@ private:
 	void getHashIdx(unsigned int *hashIndices, unsigned int *hashes, int numInputEntries, int numProbes);
 
 public:
+
+	void set_reps(uint reps);
 
 
 	/** Obtain hash indice given the (sparse) input vector, using CPU.
@@ -73,7 +76,7 @@ public:
 	@param numProbes Number of probes per input.
 	*/
 	void getHash(unsigned int *hashIndices, unsigned int *identity,
-		int *dataIdx, float *dataVal, int *dataMarker, int numInputEntries, int numProbes);
+		int *dataIdx, float *dataVal, int *dataMarker, int numInputEntries, int numProbes, size_t maxNumEntries, size_t offset);
 
 	/** Obtain hash indice given the (dense) input vector, using OpenCL.
 	Hash indice refer to the corresponding "row number" in a hash table, in the form of unsigned integer.

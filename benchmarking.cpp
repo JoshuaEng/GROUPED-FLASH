@@ -38,16 +38,16 @@ void do_group(size_t B, size_t R, size_t REPS, size_t range, uint *hashes,
   omp_set_num_threads(1);
   begin = Clock::now();
   for (uint i = 0; i < NUMQUERY; i++) {
-    uint32_t recall_buffer[TOPK];
-// TODO: This compiler directive is ugly. Also change to doing all hashing at first, make hashing not parallel
-#ifdef DENSEDATASET
-    fling->query(query_sparse_indice, query_sparse_val  + DIMENSION * i, query_sparse_marker, TOPK, recall_buffer);
+    uint32_t *recall_buffer = new uint32_t[TOPK];
+#ifdef YFCC
+    fling->query(query_sparse_indice, query_sparse_val + DIMENSION * i, query_sparse_marker, TOPK, recall_buffer);
 #else
     fling->query(query_sparse_indice, query_sparse_val, query_sparse_marker + i, TOPK, recall_buffer);
 #endif
     for (size_t j = 0; j < TOPK; j++) {
       queryOutputs[TOPK * i + j] = recall_buffer[j];
     }
+    delete[] recall_buffer;
   }
   end = Clock::now();
   omp_set_num_threads(20);
@@ -59,7 +59,7 @@ void do_group(size_t B, size_t R, size_t REPS, size_t range, uint *hashes,
   evaluate(queryOutputs, NUMQUERY, TOPK, gtruth_indice, gtruth_dist, AVAILABLE_TOPK);
 
   delete fling;
-  delete queryOutputs;
+  delete[] queryOutputs;
 }
 
 
@@ -103,7 +103,7 @@ void do_normal(size_t RESERVOIR, size_t REPS, size_t range, uint *hashes, uint *
   evaluate(queryOutputs, NUMQUERY, TOPK, gtruth_indice, gtruth_dist, AVAILABLE_TOPK);
 
   delete myReservoir;
-  delete queryOutputs;
+  delete[] queryOutputs;
 }
 
 void benchmark_sparse() {
@@ -118,6 +118,28 @@ void benchmark_sparse() {
   begin = Clock::now();
 
   // Read in data and queries
+#ifdef YFCC
+  int *sparse_data_indice, *sparse_data_marker, *sparse_query_indice, *sparse_query_marker;
+  float *sparse_query_val = new float[(size_t)(NUMQUERY) * DIMENSION];
+	fvecs_yfcc_read_queries(QUERYFILE, DIMENSION, NUMQUERY, sparse_query_val);
+
+  // LSH *hashFamily = new LSH(3, RANGE, MAXREPS, DIMENSION, sqrt(DIMENSION)); 
+  LSH *hashFamily = new LSH(3, RANGE, MAXREPS, DIMENSION, DIMENSION); 
+  unsigned int *all_hashes = new unsigned int [(size_t)NUMBASE * MAXREPS];
+  unsigned int *indices_unused;
+
+  size_t chunk_size = 1000000; // For now needs to be multiple of 1000000
+  for (size_t i = 0; i < (NUMBASE + chunk_size - 1) / chunk_size; i++) {
+    size_t num_vectors = min(chunk_size, NUMBASE - i * chunk_size);
+    cout << "Starting chunk " << i << ", contains " << num_vectors << " vectors." << endl;
+    float *sparse_data_val_chunk = new float[(size_t)num_vectors * (size_t)DIMENSION];
+    fvecs_yfcc_read_data(BASEFILE, i, num_vectors, sparse_data_val_chunk);
+    hashFamily->getHash(all_hashes, indices_unused, 
+                    sparse_data_indice, sparse_data_val_chunk, sparse_data_marker, 
+                    num_vectors, 1, NUMBASE, i * chunk_size);
+    delete[] sparse_data_val_chunk;
+  }
+#else
   int *sparse_data_indice;
   float *sparse_data_val;
   int *sparse_data_marker;
@@ -127,6 +149,7 @@ void benchmark_sparse() {
   readDataAndQueries(BASEFILE, NUMQUERY, NUMBASE, 
                      &sparse_data_indice, &sparse_data_val, &sparse_data_marker,
                      &sparse_query_indice, &sparse_query_val, &sparse_query_marker);
+#endif
 
   // Read in ground truth
   unsigned int *gtruth_indice = new unsigned int[NUMQUERY * AVAILABLE_TOPK];
@@ -145,20 +168,23 @@ void benchmark_sparse() {
   unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
   if (!USE_FLINNG) {
     std::cout << "Using normal!" << std::endl;
-    for (size_t REPS = 6; REPS <= 3050; REPS *= 1.5) {
+    for (size_t REPS = 400; REPS <= MAXREPS; REPS *= 2) { 
 
       std::cout << "Initializing data hashes, array size " << REPS * NUMBASE << endl;
       // Initialize LSH hash.
-      #ifdef DENSEDATASET
-        LSH *hashFamily = new LSH(3, RANGE, REPS, DIMENSION, 40); 
-      #else
-        LSH *hashFamily = new LSH(2, K, REPS, RANGE); 
-      #endif
-      unsigned int *hashes = new unsigned int[REPS * NUMBASE];
-      unsigned int *indices = new unsigned int[REPS * NUMBASE];
+      unsigned int *hashes;
+      unsigned int *indices;
+#ifdef YFCC
+      hashes = all_hashes;
+      hashFamily->set_reps(REPS);
+#else
+      LSH *hashFamily = new LSH(2, K, REPS, RANGE); 
+      hashes = new unsigned int[REPS * NUMBASE];
+      indices = new unsigned int[REPS * NUMBASE];
       hashFamily->getHash(hashes, indices, 
                           sparse_data_indice, sparse_data_val, sparse_data_marker, 
-                          NUMBASE, 1);
+                          NUMBASE, 1, NUMBASE, 0);
+#endif
 
       for (size_t RESERVOIR = 6; RESERVOIR <= 2000; RESERVOIR *= 1.5) {
         if (REPS * RESERVOIR < 128) {
@@ -175,29 +201,31 @@ void benchmark_sparse() {
                    gtruth_dist, sparse_query_indice, sparse_query_val, sparse_query_marker, hashFamily);
       }
 
+#ifndef YFCC
       delete[] hashes;
       delete[] indices;
       delete hashFamily;
+#endif
     }
   } else {
     std::cout << "Using groups!" << std::endl;
-    for (size_t REPS = 500; REPS <= 800; REPS *= 2) {
+    for (size_t REPS = 400; REPS <= MAXREPS; REPS *= 2) { 
 
       std::cout << "Initializing data hashes, array size " << REPS * NUMBASE << endl;
-      #ifdef DENSEDATASET
-        LSH *hashFamily = new LSH(3, RANGE, REPS, DIMENSION, 40); 
-      #else
-        LSH *hashFamily = new LSH(2, K, REPS, RANGE); 
-      #endif
-      unsigned int *hashes =
-          new unsigned int[REPS * NUMBASE];
-      unsigned int *indices =
-          new unsigned int[REPS * NUMBASE];
+      // Initialize LSH hash.
+      unsigned int *hashes;
+      unsigned int *indices;
+#ifdef YFCC
+      hashes = all_hashes;
+      hashFamily->set_reps(REPS);
+#else
+      LSH *hashFamily = new LSH(2, K, REPS, RANGE); 
+      hashes = new unsigned int[REPS * NUMBASE];
+      indices = new unsigned int[REPS * NUMBASE];
       hashFamily->getHash(hashes, indices, 
                           sparse_data_indice, sparse_data_val, sparse_data_marker, 
-                          NUMBASE, 1);
-
-      std::cout << "Initializing query hashes, array size " << REPS * NUMQUERY << endl;
+                          NUMBASE, 1, NUMBASE, 0);
+#endif
 
       for (size_t R = 2; R < 5; R++) {
         for (size_t B = 1 << 15; B * R <= 1 << 20; B *= 2) {
@@ -209,14 +237,18 @@ void benchmark_sparse() {
         }
       }
     
+#ifndef YFCC
       delete[] hashes;
       delete[] indices;
       delete hashFamily;
+#endif
     }
   }
 
   delete[] sparse_data_indice;
+#ifndef YFCC
   delete[] sparse_data_val;
+#endif
   delete[] sparse_data_marker;
   delete[] sparse_query_indice;
   delete[] sparse_query_val;

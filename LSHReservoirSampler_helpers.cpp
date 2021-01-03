@@ -20,7 +20,7 @@ void LSHReservoirSampler::reservoir_sampling_cpu_openmp(unsigned int *allprobsHa
 			TB = numProbePerTb * tb;
 
 			hashIdx = allprobsHash[indexFunc(tb, probeIdx)];
-			inputIdx = allprobsIdx[indexFunc(tb, probeIdx)];
+			inputIdx = allprobsIdx[probeIdx];
 			ct = 0;
 
 			/* Allocate the reservoir if non-existent. */
