@@ -45,7 +45,7 @@ void compute_groundtruth_yfcc() {
 
 	omp_set_num_threads(40);
 
-  cout << "Computing ground truth" << endl;
+  cout << "Computing ground truth for " << NUMBASE << " first points." << endl;
 
 	size_t topk = 128;
 
@@ -104,7 +104,7 @@ void compute_groundtruth_yfcc() {
   }
 
 	cout << endl;
-	for (size_t q = 0; q < 1; q++) {
+	for (size_t q = 0; q < NUMQUERY; q++) {
 		vector<float> dist_buffer(0);
 		vector<size_t> index_buffer(0);
 		while (queues[q].size() > 0) {
