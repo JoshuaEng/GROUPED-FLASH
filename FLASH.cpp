@@ -122,12 +122,6 @@ void compute_groundtruth_yfcc() {
 		cout << endl;
 	}
 
-
-	while (queues[0].size() > 0) {
-		cout << queues[0].top().second << " " << queues[0].top().first << endl;
-		queues[0].pop();
-	}
-
 }
 
 
