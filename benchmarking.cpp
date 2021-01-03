@@ -186,7 +186,7 @@ void benchmark_sparse() {
                           NUMBASE, 1, NUMBASE, 0);
 #endif
 
-      for (size_t RESERVOIR = 6; RESERVOIR <= 2000; RESERVOIR *= 1.5) {
+      for (size_t RESERVOIR = 100; RESERVOIR <= 3200; RESERVOIR *= 2) {
         if (REPS * RESERVOIR < 128) {
           cout << "Skipping because too small\n";
           continue;

@@ -5,6 +5,7 @@
 #include <algorithm>
 #include "omp.h"
 #include <functional>
+#include "benchmarking.h"
 
 //#define DEBUG_TALLY
 
@@ -14,13 +15,13 @@ void LSHReservoirSampler::reservoir_sampling_cpu_openmp(unsigned int *allprobsHa
 	unsigned int counter, allocIdx, reservoirRandNum, TB, hashIdx, inputIdx, ct, reservoir_full, location;
 
 #pragma omp parallel for private(TB, hashIdx, inputIdx, ct, allocIdx, counter, reservoir_full, reservoirRandNum, location)
-	for (int probeIdx = 0; probeIdx < numProbePerTb; probeIdx++) {
-		for (unsigned int tb = 0; tb < _numTables; tb++) {
+	for (size_t probeIdx = 0; probeIdx < numProbePerTb; probeIdx++) {
+		for (size_t tb = 0; tb < _numTables; tb++) {
 
 			TB = numProbePerTb * tb;
 
 			hashIdx = allprobsHash[indexFunc(tb, probeIdx)];
-			inputIdx = allprobsIdx[probeIdx];
+			inputIdx = indexFunc(tb, probeIdx) % NUMBASE;
 			ct = 0;
 
 			/* Allocate the reservoir if non-existent. */
