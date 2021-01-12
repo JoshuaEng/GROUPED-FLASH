@@ -12,12 +12,12 @@ Then modify the file location and parameters below in the Parameters section. */
 
 // #define URL
 // #define WEBSPAM_TRI
-// #define DNA_FULL_GENOME
-#define PROMETHION_SHORT
+#define DNA_FULL_GENOME
+// #define PROMETHION_SHORT
 // #define YFCC
 // #define DNA_FULL_PROTEOME
 
-#define USE_FLINNG true
+#define USE_FLINNG false
 
 /* Parameters. */
 #if defined URL
@@ -27,19 +27,12 @@ Then modify the file location and parameters below in the Parameters section. */
 #define NUMHASHBATCH				200
 
 #define K					4
-
-#define RESERVOIR_SIZE				32
-
 #define RANGE   				17
 
 #define DIMENSION				120
 #define FULL_DIMENSION				3231961
-#define NUMBASE					2386130
-#define MAX_RESERVOIR_RAND			2386130
-#define NUMQUERY				10000
-#define TOPK					128
-#define AVAILABLE_TOPK				1024
 
+#define NUMBASE					2386130
 #define NUMQUERY				10000
 #define AVAILABLE_TOPK				1024
 #define TOPK					128
@@ -58,11 +51,8 @@ Then modify the file location and parameters below in the Parameters section. */
 
 #define DIMENSION				4000
 #define FULL_DIMENSION				16609143
-#define NUMBASE					340000
-#define NUMQUERY				10000
-#define TOPK					128
-#define AVAILABLE_TOPK				1024
 
+#define NUMBASE					340000
 #define NUMQUERY				10000
 #define AVAILABLE_TOPK				1024
 #define TOPK					128
@@ -78,7 +68,6 @@ Then modify the file location and parameters below in the Parameters section. */
 
 #define K					1
 #define RANGE                                   17
-
 
 #define NUMBASE					117219
 #define NUMQUERY				10000
@@ -104,7 +93,6 @@ Then modify the file location and parameters below in the Parameters section. */
 
 #define BASEFILE	        "../Data/Proteomes/data"
 #define GTRUTHINDICE	        "../Data/Proteomes/indices"
-
 
 #elif defined PROMETHION_SHORT
 
@@ -170,9 +158,13 @@ Then modify the file location and parameters below in the Parameters section. */
 
         #define STARTRES                        (1<<2)
         #define ENDRES                          (1<<11)
+#endif
 
-        // To avoid annoying compile time errors
+// To avoid annoying compile time errors
+#ifndef DIMENSION
         #define DIMENSION 0 
+#endif
+#ifndef QUERYFILE
         #define QUERYFILE ""
 #endif
 
