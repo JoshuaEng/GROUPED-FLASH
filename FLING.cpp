@@ -156,16 +156,37 @@ void FLING::query(int *data_ids, float *data_vals, int *data_marker,
     sorted[counts[i]].push_back(i);
   }
 
-  vector<uint8_t> num_counts(num_points, 0);
-  uint num_found = 0;
-  for (int rep = hash_repeats; rep >= 0; --rep) {
-    for (uint bin : sorted[rep]) {
-      for (uint point : meta_rambo[bin]) {
-        if (++num_counts[point] == row_count) {
-          query_output[num_found] = point;
-          if (++num_found == query_goal) {
-            // cout << "Using threshhold " << rep << endl;
-            return;
+  if (row_count > 2 || num_points < 4000000) {
+    vector<uint8_t> num_counts(num_points, 0);
+    uint num_found = 0;
+    for (int rep = hash_repeats; rep >= 0; --rep) {
+      for (uint bin : sorted[rep]) {
+        for (uint point : meta_rambo[bin]) {
+          if (++num_counts[point] == row_count) {
+            query_output[num_found] = point;
+            if (++num_found == query_goal) {
+              // cout << "Using threshhold " << rep << endl;
+              return;
+            }
+          }
+        }
+      }
+    }
+  }
+  else {
+    char* num_counts = (char*) calloc(num_points / 8 + 1, sizeof(char));
+    uint num_found = 0;
+    for (int rep = hash_repeats; rep >= 0; --rep) {
+      for (uint bin : sorted[rep]) {
+        for (uint point : meta_rambo[bin]) {
+          if (num_counts[(point / 8)] & (1 << (point % 8))) {
+            query_output[num_found] = point;
+            if (++num_found == query_goal) {
+              // cout << "Using threshhold " << rep << endl;
+              return;
+            }
+          } else {
+            num_counts[(point / 8)] |= (1 << (point % 8));
           }
         }
       }
