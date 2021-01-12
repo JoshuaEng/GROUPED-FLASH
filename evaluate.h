@@ -17,10 +17,7 @@ void evaluate(
 	int availableTopk		// Available topk information in the groundtruth.
 	);				
 
-void r1Metric(unsigned int *queryOutputs, int numQueries, int topk,
-	unsigned int *groundTruthIdx, int availableTopk);
-
-void r10Metric(unsigned int *queryOutputs, int numQueries, int topk,
-	unsigned int *groundTruthIdx, int availableTopk);
+void rMetric(unsigned int *queryOutputs, int numQueries, int topk,
+	unsigned int *groundTruthIdx, int availableTopk, int numerator);
 
 #endif /* EVALUATE_H */

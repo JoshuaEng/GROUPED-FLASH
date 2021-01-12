@@ -166,7 +166,7 @@ void benchmark_sparse() {
   unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
   if (!USE_FLINNG) {
     std::cout << "Using normal!" << std::endl;
-    for (size_t reps = 400; reps <= MAXREPS; reps *= 2) { 
+    for (size_t reps = STARTREPS; reps <= MAXREPS; reps *= 2) { 
 
       std::cout << "Initializing data hashes, array size " << reps * NUMBASE << endl;
       // Initialize LSH hash.
@@ -185,7 +185,8 @@ void benchmark_sparse() {
 #endif
 
       for (size_t reservoir = STARTRES; reservoir <= ENDRES; reservoir *= RESRATIO) {
-        if (reps * reservoir < 128) {
+        // Need a fudge factor for some reason
+        if (reps * reservoir < TOPK + 10) {
           cout << "Skipping because too small\n";
           continue;
         }
