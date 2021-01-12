@@ -7,14 +7,14 @@
 /* Select a dataset below by uncommenting it.
 Then modify the file location and parameters below in the Parameters section. */
 
-// Note that gtruthdist and gtruthindc require there to be no new lines (afaik), so
-// replace new lines with spaces in those files
+// Note that gtruthindc require there to be no new lines, so remove new lines
+// in those files (replace with spaces if needed)
 
 // #define URL
 // #define WEBSPAM_TRI
 // #define DNA_FULL_GENOME
-// #define PROMETHION_SHORT
-#define YFCC
+#define PROMETHION_SHORT
+// #define YFCC
 // #define DNA_FULL_PROTEOME
 
 #define USE_FLINNG true
@@ -27,10 +27,10 @@ Then modify the file location and parameters below in the Parameters section. */
 #define NUMHASHBATCH				200
 
 #define K					4
-#define RANGE_POW				15
-#define RANGE_ROW_U				15
 
 #define RESERVOIR_SIZE				32
+
+#define RANGE   				17
 
 #define DIMENSION				120
 #define FULL_DIMENSION				3231961
@@ -46,7 +46,6 @@ Then modify the file location and parameters below in the Parameters section. */
 
 #define BASEFILE		"../Data/Url/data"
 #define GTRUTHINDICE	        "../Data/Url/indices"
-#define GTRUTHDIST		"../Data/Url/distances"
 
 #elif defined WEBSPAM_TRI
 
@@ -55,8 +54,7 @@ Then modify the file location and parameters below in the Parameters section. */
 #define NUMHASHBATCH				50
 
 #define K					4
-#define RANGE_POW				18
-#define RANGE_ROW_U				18
+#define RANGE                                   18
 
 #define DIMENSION				4000
 #define FULL_DIMENSION				16609143
@@ -71,7 +69,6 @@ Then modify the file location and parameters below in the Parameters section. */
 
 #define BASEFILE	        "../Data/Webspam/data"
 #define GTRUTHINDICE	        "../Data/Webspam/indices"
-#define GTRUTHDIST		"../Data/Webspam/distances"
 
 #elif defined DNA_FULL_GENOME
 
@@ -80,6 +77,8 @@ Then modify the file location and parameters below in the Parameters section. */
 #define NUMHASHBATCH				50
 
 #define K					1
+#define RANGE                                   17
+
 
 #define NUMBASE					117219
 #define NUMQUERY				10000
@@ -88,7 +87,6 @@ Then modify the file location and parameters below in the Parameters section. */
 
 #define BASEFILE	        "../Data/Genomes/data"
 #define GTRUTHINDICE	        "../Data/Genomes/indices"
-#define GTRUTHDIST		"../Data/Genomes/distances"
 
 #elif defined DNA_FULL_PROTEOME
 
@@ -97,6 +95,7 @@ Then modify the file location and parameters below in the Parameters section. */
 #define NUMHASHBATCH				50
 
 #define K					1
+#define RANGE                                   17
 
 #define NUMBASE					116373
 #define NUMQUERY				10000
@@ -105,7 +104,6 @@ Then modify the file location and parameters below in the Parameters section. */
 
 #define BASEFILE	        "../Data/Proteomes/data"
 #define GTRUTHINDICE	        "../Data/Proteomes/indices"
-#define GTRUTHDIST		"../Data/Proteomes/distances"
 
 
 #elif defined PROMETHION_SHORT
@@ -115,6 +113,7 @@ Then modify the file location and parameters below in the Parameters section. */
 #define NUMHASHBATCH				200
 
 #define K					1
+#define RANGE                                   17
 
 #define NUMBASE					3696341
 #define NUMQUERY				10000
@@ -130,27 +129,53 @@ Then modify the file location and parameters below in the Parameters section. */
 #define DENSEDATASET
 
 // #define NUMBASE                                 96970001
-#define NUMBASE                                 8000000
+#define NUMBASE                                 1000000
 #define NUMQUERY				10000
 #define TOPK					128
-#define AVAILABLE_TOPK				100
+#define AVAILABLE_TOPK				50
 #define NUMHASHBATCH				200
-#define MAXREPS                                 1600
 
 #define DIMENSION				4096
 #define RANGE   				12
 
-// #define BASEFILE	        "/home/jae4/Data/Yffc/YFCC100M_hybridCNN_gmean_fc6_"
-// #define GTRUTHINDICE	        "/home/jae4/Data/Yffc/yfcc100m_nq10000_k100_indices_" STR(NUMBASE) ".txt"
-// #define GTRUTHDIST		"/home/jae4/Data/Yffc/yfcc100m_nq10000_k100_distances.txt"
-// #define QUERYFILE	        "/home/jae4/Data/Yffc/yfcc100m_nq10000_queries.txt"
-#define BASEFILE                "/scratch0/jae4/Intel/YFCC100M_hybridCNN_gmean_fc6_"
-#define GTRUTHINDICE            "/scratch0/jae4/Intel/yfcc100m_nq10000_k100_indices.txt"
-#define GTRUTHDIST              "/scratch0/jae4/Intel/yfcc100m_nq10000_k100_distances.txt"
-#define QUERYFILE               "/scratch0/jae4/Intel/yfcc100m_nq10000_queries.txt"
-
+#define BASEFILE	        "../Data/Yffc/YFCC100M_hybridCNN_gmean_fc6_"
+#define GTRUTHINDICE	        "../Data/Yffc/yfcc100m_nq10000_k" STR(AVAILABLE_TOPK) "_indices_" STR(NUMBASE) ".txt"
+#define QUERYFILE	        "../Data/Yffc/yfcc100m_nq10000_queries.txt"
 
 #endif
+
+#define STARTREPS                               (1<<2)
+#define MAXREPS                                 (1<<11)
+#define REPRATIO                                2
+
+#define RESRATIO                                2
+#define BRATIO                                  2
+
+
+#ifdef YFCC
+        #define STARTB                          (1<<12)
+        #define ENDB                            (1<<19)
+        #define STARTR                          2
+        #define ENDR                            2
+        #define FLINNG32BIT
+
+        #define STARTRES                        (1<<3)
+        #define ENDRES                          (1<<12)
+#else
+        #define STARTB                          (1<<11)
+        #define ENDB                            (1<<15)
+        #define STARTR                          2
+        #define ENDR                            4 
+        #define FLINNG16BIT
+
+        #define STARTRES                        (1<<2)
+        #define ENDRES                          (1<<11)
+
+        // To avoid annoying compile time errors
+        #define DIMENSION 0 
+        #define QUERYFILE ""
+#endif
+
 
 void benchmark_sparse();
 

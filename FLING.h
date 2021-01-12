@@ -6,6 +6,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include "benchmarking.h"
 
 class FLING {
 
@@ -20,7 +21,11 @@ private:
   uint internal_hash_length;
   uint internal_hash_bits;
   uint hash_size;
+#ifdef FLINNG32BIT
   std::vector<uint32_t> *rambo_array;
+#else
+  std::vector<uint16_t> *rambo_array;
+#endif
   std::vector<uint> *meta_rambo;
   uint *hashes;
   uint num_hashes_generated;

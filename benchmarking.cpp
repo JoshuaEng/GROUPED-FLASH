@@ -18,8 +18,8 @@
 #include <string>
 #include <vector>
 
-void do_group(size_t B, size_t R, size_t REPS, size_t range, uint *hashes,
-              uint max_reps, unsigned int *gtruth_indice, float *gtruth_dist,
+void do_group(size_t b, size_t r, size_t reps, size_t range, uint *hashes,
+              uint max_reps, unsigned int *gtruth_indice,
               int *query_sparse_indice, float *query_sparse_val, int *query_sparse_marker, 
               LSH *hash_family) {
 
@@ -30,7 +30,7 @@ void do_group(size_t B, size_t R, size_t REPS, size_t range, uint *hashes,
   float etime_0;
 
   // Create index
-  FLING *fling = new FLING(R, B, hashes, max_reps, hash_family, range, REPS, NUMBASE);
+  FLING *fling = new FLING(r, b, hashes, max_reps, hash_family, range, reps, NUMBASE);
   fling->finalize_construction();
 
   // Do queries
@@ -56,15 +56,15 @@ void do_group(size_t B, size_t R, size_t REPS, size_t range, uint *hashes,
   std::cout << "Queried " << NUMQUERY << " datapoints, used " << etime_0
             << "ms. \n";
 
-  evaluate(queryOutputs, NUMQUERY, TOPK, gtruth_indice, gtruth_dist, AVAILABLE_TOPK);
+  evaluate(queryOutputs, NUMQUERY, TOPK, gtruth_indice, AVAILABLE_TOPK);
 
   delete fling;
   delete[] queryOutputs;
 }
 
 
-void do_normal(size_t RESERVOIR, size_t REPS, size_t range, uint *hashes, uint *indices, 
-              uint max_reps, unsigned int *gtruth_indice, float *gtruth_dist,
+void do_normal(size_t reservoir, size_t reps, size_t range, uint *hashes, uint *indices, 
+              uint max_reps, unsigned int *gtruth_indice,
               int *query_sparse_indice, float *query_sparse_val, int *query_sparse_marker, 
               LSH *hashFamily) {
 
@@ -77,7 +77,7 @@ void do_normal(size_t RESERVOIR, size_t REPS, size_t range, uint *hashes, uint *
   // Dimension not used so just pass in -1
   // Initialize hashtables and other datastructures.
   LSHReservoirSampler *myReservoir = new LSHReservoirSampler(
-      hashFamily, RANGE, REPS, RESERVOIR, -1, range, NUMBASE, 1, 1, 1); 
+      hashFamily, RANGE, reps, reservoir, -1, range, NUMBASE, 1, 1, 1); 
 
 
   for (size_t start = 0; start < NUMBASE;) {
@@ -100,7 +100,7 @@ void do_normal(size_t RESERVOIR, size_t REPS, size_t range, uint *hashes, uint *
   std::cout << "Queried " << NUMQUERY << " datapoints, used " << etime_0
             << "ms." << endl;
  
-  evaluate(queryOutputs, NUMQUERY, TOPK, gtruth_indice, gtruth_dist, AVAILABLE_TOPK);
+  evaluate(queryOutputs, NUMQUERY, TOPK, gtruth_indice, AVAILABLE_TOPK);
 
   delete myReservoir;
   delete[] queryOutputs;
@@ -123,8 +123,7 @@ void benchmark_sparse() {
   float *sparse_query_val = new float[(size_t)(NUMQUERY) * DIMENSION];
 	fvecs_yfcc_read_queries(QUERYFILE, DIMENSION, NUMQUERY, sparse_query_val);
 
-  // LSH *hashFamily = new LSH(3, RANGE, MAXREPS, DIMENSION, sqrt(DIMENSION)); 
-  LSH *hashFamily = new LSH(3, RANGE, MAXREPS, DIMENSION, DIMENSION); 
+  LSH *hashFamily = new LSH(3, RANGE, MAXREPS, DIMENSION, sqrt(DIMENSION)); 
   unsigned int *all_hashes = new unsigned int [(size_t)NUMBASE * MAXREPS];
   unsigned int *indices_unused;
 
@@ -154,9 +153,7 @@ void benchmark_sparse() {
 
   // Read in ground truth
   unsigned int *gtruth_indice = new unsigned int[NUMQUERY * AVAILABLE_TOPK];
-  float *gtruth_dist = new float[NUMQUERY * AVAILABLE_TOPK];
   readGroundTruthInt(GTRUTHINDICE, NUMQUERY, AVAILABLE_TOPK, gtruth_indice);
-  readGroundTruthFloat(GTRUTHDIST, NUMQUERY, AVAILABLE_TOPK, gtruth_dist);
 
 
   end = Clock::now();
@@ -169,37 +166,36 @@ void benchmark_sparse() {
   unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
   if (!USE_FLINNG) {
     std::cout << "Using normal!" << std::endl;
-    for (size_t REPS = 400; REPS <= MAXREPS; REPS *= 2) { 
+    for (size_t reps = 400; reps <= MAXREPS; reps *= 2) { 
 
-      std::cout << "Initializing data hashes, array size " << REPS * NUMBASE << endl;
+      std::cout << "Initializing data hashes, array size " << reps * NUMBASE << endl;
       // Initialize LSH hash.
       unsigned int *hashes;
       unsigned int *indices;
 #ifdef YFCC
       hashes = all_hashes;
-      hashFamily->set_reps(REPS);
+      hashFamily->set_reps(reps);
 #else
-      LSH *hashFamily = new LSH(2, K, REPS, RANGE); 
-      hashes = new unsigned int[REPS * NUMBASE];
-      indices = new unsigned int[REPS * NUMBASE];
+      LSH *hashFamily = new LSH(2, K, reps, RANGE); 
+      hashes = new unsigned int[reps * NUMBASE];
+      indices = new unsigned int[reps * NUMBASE];
       hashFamily->getHash(hashes, indices, 
                           sparse_data_indice, sparse_data_val, sparse_data_marker, 
                           NUMBASE, 1, NUMBASE, 0);
 #endif
 
-      for (size_t RESERVOIR = 100; RESERVOIR <= 3200; RESERVOIR *= 2) {
-        if (REPS * RESERVOIR < 128) {
+      for (size_t reservoir = STARTRES; reservoir <= ENDRES; reservoir *= RESRATIO) {
+        if (reps * reservoir < 128) {
           cout << "Skipping because too small\n";
           continue;
         }
-        if ((REPS * RESERVOIR * (1 << RANGE)) > pow(10, 11)) {
+        if ((reps * reservoir * (1 << RANGE)) > pow(10, 11)) {
           cout << "Skipping because too big\n";
           continue;
         }
-        std::cout << "STATS_NORMAL: " << RESERVOIR << " " << RANGE << " "
-                  << REPS << std::endl;
-          do_normal(RESERVOIR, REPS, RANGE, hashes, indices, REPS, gtruth_indice,
-                   gtruth_dist, sparse_query_indice, sparse_query_val, sparse_query_marker, hashFamily);
+        std::cout << "STATS_NORMAL: " << reservoir << " " << RANGE << " "
+                  << reps << std::endl;
+          do_normal(reservoir, reps, RANGE, hashes, indices, reps, gtruth_indice, sparse_query_indice, sparse_query_val, sparse_query_marker, hashFamily);
       }
 
 #ifndef YFCC
@@ -210,30 +206,35 @@ void benchmark_sparse() {
     }
   } else {
     std::cout << "Using groups!" << std::endl;
-    for (size_t REPS = 200; REPS <= MAXREPS; REPS *= 2) { 
+    for (size_t reps = STARTREPS; reps <= MAXREPS; reps *= REPRATIO) { 
 
-      std::cout << "Initializing data hashes, array size " << REPS * NUMBASE << endl;
+      std::cout << "Initializing data hashes, array size " << reps * NUMBASE << endl;
       // Initialize LSH hash.
       unsigned int *hashes;
       unsigned int *indices;
 #ifdef YFCC
       hashes = all_hashes;
-      hashFamily->set_reps(REPS);
+      hashFamily->set_reps(reps);
 #else
-      LSH *hashFamily = new LSH(2, K, REPS, RANGE); 
-      hashes = new unsigned int[REPS * NUMBASE];
-      indices = new unsigned int[REPS * NUMBASE];
+      LSH *hashFamily = new LSH(2, K, reps, RANGE); 
+      hashes = new unsigned int[reps * NUMBASE];
+      indices = new unsigned int[reps * NUMBASE];
       hashFamily->getHash(hashes, indices, 
                           sparse_data_indice, sparse_data_val, sparse_data_marker, 
                           NUMBASE, 1, NUMBASE, 0);
 #endif
 
-      for (size_t R = 2; R < 5; R++) {
-        for (size_t B = 1 << 15; B < 1 << 25; B *= 2) {
-          std::cout << "STATS_GROUPS: " << R << " " << B << " " << RANGE << " "
-                    << REPS << std::endl;
-          do_group(B, R, REPS, RANGE, hashes, REPS, gtruth_indice,
-                   gtruth_dist, sparse_query_indice, sparse_query_val,
+      for (size_t r = STARTR; r < ENDR; r++) {
+        for (size_t b = STARTB; b < ENDB; b *= BRATIO) {
+          #ifdef FLINNG16BIT
+            if (b*r > 1 << 16) {
+              continue;
+            }
+          #endif
+          std::cout << "STATS_GROUPS: " << r << " " << b << " " << RANGE << " "
+                    << reps << std::endl;
+          do_group(b, r, reps, RANGE, hashes, reps, gtruth_indice,
+                   sparse_query_indice, sparse_query_val,
                    sparse_query_marker, hashFamily);
         }
       }
@@ -255,6 +256,5 @@ void benchmark_sparse() {
   delete[] sparse_query_val;
   delete[] sparse_query_marker;
   delete[] gtruth_indice;
-  delete[] gtruth_dist;
   delete[] queryOutputs;
 }

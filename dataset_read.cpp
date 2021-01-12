@@ -406,12 +406,6 @@ void fvecs_yfcc_read_data(const std::string& file_prefix, int offset, int readsi
         for (size_t i = 0; i < read * DIMENSION; i++) {
           start[index + i] = (fvs[i] - averages[i % DIMENSION]) / averages[DIMENSION];
         }
-        // if (features_read == 1111000) {
-        //   for (size_t i = 0; i < 10; i++) {
-        //     cout << fvs[250 * DIMENSION + i] << " ";
-        //   }
-        //   cout << endl;
-        // }
         index += read * DIMENSION;
       	features_read += read;
     }
@@ -421,16 +415,15 @@ void fvecs_yfcc_read_data(const std::string& file_prefix, int offset, int readsi
 void fvecs_yfcc_read_queries(const std::string& file, int dim, int readsize, float* out) {
   ifstream in(file);
   string line;
-  // float averages[DIMENSION + 1];
-  // get_averages(averages);
+  float averages[DIMENSION + 1];
+  get_averages(averages);
   for (int line_num = 0; line_num < readsize; line_num++) {
     getline(in, line);
     stringstream ss(line);
     string buff;
     for (int d = 0; d < dim; d++){
       getline(ss, buff, ' ');
-      // out[line_num * dim + d] = (stof(buff) - averages[d]) / averages[DIMENSION];
-      out[line_num * dim + d] = stof(buff);
+      out[line_num * dim + d] = (stof(buff) - averages[d]) / averages[DIMENSION];
     }
   }
   // partly courtesy of:

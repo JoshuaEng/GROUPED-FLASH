@@ -14,7 +14,6 @@ void evaluate(
 	int numQueries,			// The number of query entries, should be the same for outputs and groundtruths.
 	int topk,				// The topk per query contained in the queryOutputs.
 	unsigned int *groundTruthIdx,	// The groundtruth indice vector.
-	float *groundTruthDist,	// The groundtruth distance vector.
 	int availableTopk		// Available topk information in the groundtruth.
 	);				
 
