@@ -2,19 +2,24 @@ import argparse
 
 # Instantiate the parser
 parser = argparse.ArgumentParser(description='Compare FLASH and FLINNG')
+parser.add_argument("dataset")
 parser.add_argument("compare_by")
-parser.add_argument("their_file")
-parser.add_argument("my_file")
-parser.add_argument("lower_bound")
 parser.add_argument('-save', action='store_true')
 args = parser.parse_args()
 save = args.save
 compare_by = args.compare_by
-num_queries = 10000
-dataset = args.my_file.split("_")[1]
-lower_bound = float(args.lower_bound)
+dataset = args.dataset
 
-print(dataset, compare_by)
+files = [f"../my_{dataset}_cached3.txt", f"../their_{dataset}_cached3.txt"]
+num_queries = 10000
+
+def get_pareto(record):
+        record.sort()
+        result = [record[0]]
+        for i in range(1, len(record)):
+                if result[-1][1] < record[i][1]:
+                        result.append(record[i])
+        return result
 
 def parse_file(file_name, line_hint):   
         record = []
@@ -36,22 +41,30 @@ def parse_file(file_name, line_hint):
                                                 break
                                         if line == "":
                                                 break
-        return record
+        return get_pareto(record)
 
-group_record = parse_file(args.my_file, "STATS_GROUPS:")
-normal_record = parse_file(args.their_file, "STATS_NORMAL:")
+group_record = parse_file(files[0], "STATS_GROUPS:")
+normal_record = parse_file(files[1], "STATS_NORMAL:")
+        
+colors = ["#264478","#F08406"]
 
+# markers = ["s","^","+"]
+# times = ["2","20","200"]
+linestyles = ["--", "-.", ":"]
+titlefontsize = 22
+axisfontsize = 18
+labelfontsize = 12
 
 import matplotlib.pyplot as plt
 import math
-plt.scatter([y for (x,y, z) in group_record if y > lower_bound], [math.log10(10000 / x * 1000) for (x,y, z) in group_record if y > lower_bound], marker='x', label=f'FLINNG' )
-plt.scatter([y for (x,y, z) in normal_record if x != 0  and y > lower_bound], [math.log10(10000 / x * 1000) for (x,y, z) in normal_record if x != 0  and y > lower_bound], marker='s', label='FLASH')
-plt.legend(loc='upper right')
-plt.xlabel(compare_by)
-plt.ylabel('Queries per second (log 10)')
-plt.title((dataset).title())
+plt.plot([y for (x,y, z) in group_record], [math.log10(10000 / x * 1000) for (x,y, z) in group_record], label=f'FLINNG', color=colors[0], linestyle = linestyles[0], marker = "s" )
+plt.plot([y for (x,y, z) in normal_record if x != 0], [math.log10(10000 / x * 1000) for (x,y, z) in normal_record if x != 0], label='FLASH', color=colors[1], linestyle = linestyles[0], marker = "s")
+plt.legend(loc='upper right', fontsize=labelfontsize)
+plt.xlabel(compare_by, fontsize=axisfontsize)
+plt.ylabel('Queries per second (log 10)', fontsize=axisfontsize)
+plt.title((dataset).title(), fontsize=titlefontsize)
 if save:
         valid = compare_by.replace("@", "at")
-        plt.savefig(f"/home/jae4/FLINNG-Results/trecall/{dataset}-{valid}-{int(lower_bound*100)}.png", bbox_inches='tight')
+        plt.savefig(f"/home/jae4/FLINNG-Results/trecall/{dataset}-{valid}.png", bbox_inches='tight')
 else:
         plt.show()

@@ -24,9 +24,10 @@ void evaluate (
 	rMetric(queryOutputs, numQueries, topk, groundTruthIdx, availableTopk, 10);
 	if (availableTopk >= 100) {
 		rMetric(queryOutputs, numQueries, topk, groundTruthIdx, availableTopk, 100);
+	} else {
+		rMetric(queryOutputs, numQueries, topk, groundTruthIdx, availableTopk, availableTopk);
 	}
 	
-	// gMetric(queryOutputs, numQueries, topk, groundTruthIdx, groundTruthDist, availableTopk, gstdVec, gstdCnt, nList, nCnt);
 }
 
 void rMetric(unsigned int *queryOutputs, int numQueries, int topk,
