@@ -1,58 +1,24 @@
 #!/bin/bash
-# declare -a datasets=("webspam" "url" "genomes" "proteomes" "promethion")
 
+python3 recall_precision.py url .. 10 -save &
+python3 recall_precision.py webspam .. 10 -save &
+python3 recall_precision.py promethion .. 10 -save &
+python3 recall_precision.py genomes .. 10 -save &
+python3 recall_precision.py proteomes .. 10 -save &
+python3 recall_precision.py yfcc .. 1 -save &
 
-# declare -a recall_precision_times=("2" "20" "200")
-# declare -a recall_precision_neighbours=("1" "10")
-
-# declare -a recall_time_cutoffs=("0" "0.2")
-# declare -a recall_time_comparebys=("R1@1" "R1@10" "R1@100" "R10@10" "R10@100")
-
-# for dataset in "${datasets[@]}"
-# do
-#   my_file=$(printf "../my_%s_cached2.txt" "$dataset")
-#   their_file=$(printf "../their_%s_cached2.txt" "$dataset")
-  
-#   for time in "${recall_precision_times[@]}"
-#   do
-#     for neighbours in "${recall_precision_neighbours[@]}"
-#     do
-#       python3 recall_precision.py "$neighbours" "$their_file" "$my_file" "$time" -save
-#     done
-#   done
-
-#   for cutoff in "${recall_time_cutoffs[@]}"
-#   do
-#     for compareby in "${recall_time_comparebys[@]}"
-#     do
-#       python3 recall_time.py "$compareby" "$their_file" "$my_file" "$cutoff" -save
-#     done
-#   done
-
-# done
-
-python3 multiple_curves.py url 10 -save &
-python3 multiple_curves.py webspam 10 -save &
-python3 multiple_curves.py promethion 10 -save &
-python3 multiple_curves.py genomes 10 -save &
-# python3 recall_time.py proteomes 10 -save &
-python3 multiple_curves.py yfcc 1 -save &
-
-python3 recall_time.py url R10@100 -save &
-python3 recall_time.py webspam R10@100 -save &
-python3 recall_time.py promethion R10@100 -save &
-python3 recall_time.py genomes R10@100 -save &
-# python3 recall_time.py proteomes R10@100 -save &
-python3 recall_time.py yfcc R1@1 -save &
-
-TRECALL="/home/jae4/FLINNG-Results/trecall/"
-PRECALL="/home/jae4/FLINNG-Results/precall-mult/"
+python3 recall_time.py url .. R10@100 -save &
+python3 recall_time.py webspam .. R10@100 -save &
+python3 recall_time.py promethion .. R10@100 -save &
+python3 recall_time.py genomes .. R10@100 -save &
+python3 recall_time.py proteomes .. R10@100 -save &
+python3 recall_time.py yfcc .. R1@1 -save &
 
 wait
-convert "${TRECALL}url-R10at100.png" "${TRECALL}promethion-R10at100.png" "${TRECALL}yfcc-R1at1.png"  +append temp1.png
-convert "${TRECALL}webspam-R10at100.png" "${TRECALL}genomes-R10at100.png"  +append temp2.png
-convert "${PRECALL}url-10.png" "${PRECALL}promethion-10.png" "${PRECALL}yfcc-1.png"  +append temp3.png
-convert "${PRECALL}webspam-10.png" "${PRECALL}genomes-10.png"  +append temp4.png
+convert "url-R10at100.png" "promethion-R10at100.png" "yfcc-R1at1.png"  +append temp1.png
+convert "webspam-R10at100.png" "genomes-R10at100.png" "proteomes-R10at100.png" +append temp2.png
+convert "url-10.png" "promethion-10.png" "yfcc-1.png"  +append temp3.png
+convert "webspam-10.png" "genomes-10.png" "proteomes-10.png"  +append temp4.png
 convert temp1.png temp3.png temp2.png temp4.png -append all.png
 convert temp1.png temp3.png -append some.png
 

@@ -4,9 +4,11 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("dataset")
+parser.add_argument("directory")
 parser.add_argument('-save', action='store_true')
 parser.add_argument("topk")
 args = parser.parse_args()
+directory = args.directory
 save = args.save
 dataset = args.dataset
 compare_by = args.topk
@@ -22,7 +24,20 @@ def get_pareto(record):
 			result.append(record[i])
 	return result
 
-def get_data(file_name, max_time):
+def read_hnsw(file_name, max_time):
+	record = []
+	with open(file_name, "r") as f:
+		while True:
+			line = f.readline()
+			if not line:
+				break
+			if line.startswith("R" + compare_by + "@"):
+				values = line.split()[1].split(",")
+				if float(values[0]) <= max_time:
+					record.append((float(values[1]), float(values[2])))
+	return get_pareto(record)
+
+def read_flash(file_name, max_time):
 	record = []
 	with open(file_name, "r") as f:
 		while True:
@@ -47,35 +62,34 @@ def get_data(file_name, max_time):
 	return get_pareto(record)
 
 
+def get_data(file_name, max_time):
+	if "hnsw" in file_name:
+		return read_hnsw(file_name, max_time)
+	else:
+		return read_flash(file_name, max_time)
+	
 titlefontsize = 22
 axisfontsize = 18
 labelfontsize = 12
 
-methods = ["flinng", "flash"]
-colors = ["#264478","#F08406"]
-files = [f"../my_{dataset}_cached3.txt", f"../their_{dataset}_cached3.txt"]
+methods = ["flinng", "flash", "hnsw"]
+colors = ["#264478","#F08406", "#232f3e"]
 
-# markers = ["s","^","+"]
-markers = ["s","^"]
-times = ["2","20","200"]
-# linestyles = ["--", "-.", ":"]
-linestyles = ["--", "-."]
-
-if dataset == "yfcc":
-	start = 1
-	end = 3
-else:
-	start = 0
-	end = 2
+markers = ["s"]
+times = ["20"]
+linestyles = ["--"]
 
 # for more linestyles see here: https://matplotlib.org/3.1.1/gallery/lines_bars_and_markers/linestyles.html
 
 
-
-for c, method, file_name in zip(colors, methods, files):
-	for ls, mark, t in list(zip(linestyles, markers, times[start:end])): 
-		D = get_data(file_name, int(t))
-		plt.plot([x for (x, _) in D], [y for (_, y) in D], color = c, linestyle = ls, marker = mark, label = method.upper()+" ("+t+"ms)", alpha = 0.8)
+for c, method in zip(colors, methods):
+	file_name = directory + f"/{method}_{dataset}.txt"
+	for ls, mark, t in list(zip(linestyles, markers, times)): 
+		try:
+			D = get_data(file_name, int(t))
+			plt.plot([x for (x, _) in D], [y for (_, y) in D], color = c, linestyle = ls, marker = mark, label = method.upper()+" ("+t+"ms)", alpha = 0.8)
+		except:
+			pass
 
 plt.legend(fontsize = labelfontsize)
 plt.title(f"{dataset}: Top-{compare_by} Recall".title(),fontsize = titlefontsize)
@@ -83,7 +97,7 @@ plt.xlabel("Recall",fontsize = axisfontsize)
 plt.ylabel("Precision",fontsize = axisfontsize)
 
 if save:
-	plt.savefig(f"/home/jae4/FLINNG-Results/precall-mult/{dataset}-{compare_by}.png", bbox_inches='tight')
+	plt.savefig(f"{dataset}-{compare_by}.png", bbox_inches='tight')
 else:
 	plt.show()
 
