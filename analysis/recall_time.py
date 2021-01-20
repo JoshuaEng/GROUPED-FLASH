@@ -1,6 +1,7 @@
 import argparse
-import matplotlib.pyplot as plt
+import matplotlib
 import math
+from get_data import get_all_data_colored
 
 # Instantiate the parser
 parser = argparse.ArgumentParser(description='Compare FLASH and FLINNG')
@@ -8,6 +9,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("dataset")
 parser.add_argument("directory")
 parser.add_argument('-save', action='store_true')
+parser.add_argument('-cutoff', action='store_true')
 parser.add_argument("compare_by")
 
 args = parser.parse_args()
@@ -15,73 +17,36 @@ directory = args.directory
 save = args.save
 dataset = args.dataset
 compare_by = args.compare_by
+cutoff = args.cutoff
 
-num_queries = 10000
+if save:
+	matplotlib.use('agg')
+import matplotlib.pyplot as plt
 
 def get_pareto(record):
 	record.sort()
 	result = [record[0]]
 	for i in range(1, len(record)):
-		if result[-1][1] < record[i][1]:
+		if result[-1][2] < record[i][2]:
 			result.append(record[i])
 	return result
-
-def read_hnsw(file_name):
-	record = []
-	with open(file_name, "r") as f:
-		while True:
-			line = f.readline()
-			if not line:
-				break
-			if line.startswith(compare_by):
-				values = line.split()[1].split(",")
-				record.append((float(values[0]) * num_queries, float(values[1])))
-	return get_pareto(record)
-
-def read_flash(file_name):
-	record = []
-	with open(file_name, "r") as f:
-		while True:
-			line = f.readline()
-			if line == "":
-				break
-			if line.startswith("STAT"):
-				while True:
-					line = f.readline()
-					if line.startswith("Queried"):
-						time = float(line.strip().split(" ")[-1][:-3])
-					if line.startswith(compare_by):
-						record.append((time, float(line.split()[2])))
-						break
-					if line == "":
-						break
-	return get_pareto(record)
-
-def get_data(file_name):   
-	if "hnsw" in file_name:
-		return read_hnsw(file_name)
-	else:
-		return read_flash(file_name)
 	
 titlefontsize = 22
 axisfontsize = 18
 labelfontsize = 12
-
-methods = ["flinng", "flash", "hnsw"]
-colors = ["#264478","#F08406", "#232f3e"]
-
 mark = "s"
 ls = "--"
 
-for c, method in zip(colors, methods):
-	try:
-		file_name = directory + f"/{method}_{dataset}.txt"
-		D = get_data(file_name)
-		plt.plot([y for (_, y) in D], [math.log10(num_queries / x * 1000) for (x, _) in D if x != 0], color = c, linestyle = ls, marker = mark, label = method.upper(), alpha = 0.8)
-	except:
-		pass
+all_data = get_all_data_colored(dataset)
+for method, data, c in all_data:
+		try:
+			filtered = get_pareto([d for d in data if d[0] == compare_by and (not cutoff or d[2] > 0.8)])
+			plt.plot([d[2] for d in filtered], [math.log10(1000 / d[1]) for d in filtered if d[1] != 0], color = c, linestyle = ls, marker = mark, label = method.upper(), alpha = 0.8)
+		except:
+			print(method, "failed in recall time on", dataset)
+			pass
 		
-plt.legend(loc='upper right', fontsize=labelfontsize)
+plt.legend(fontsize=labelfontsize)
 plt.xlabel(compare_by, fontsize=axisfontsize)
 plt.ylabel('Queries per second (log 10)', fontsize=axisfontsize)
 plt.title((dataset).title(), fontsize=titlefontsize)
