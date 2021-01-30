@@ -33,6 +33,16 @@ void evaluate (
 void rMetric(unsigned int *queryOutputs, int numQueries, int topk,
 	unsigned int *groundTruthIdx, int availableTopk, int numerator) {
 
+	printf("Top 10 neighbours of first query\n");
+	for (int i = 0; i < 10; i++) {
+		printf("%d ", queryOutputs[i]);
+	}
+	printf("\n");
+	printf("Top 10 neighbours of second query\n");
+	for (int i = 0; i < 10; i++) {
+		printf("%d ", queryOutputs[topk + i]);
+	}
+	printf("\n");
 	printf("\nR10@k Average fraction of top %d nearest neighbors returned in k first results. \n", numerator);
 
 	int *good_counts = new int[topk]();
