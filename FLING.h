@@ -11,7 +11,7 @@
 class FLING {
 
 private:
-  std::vector<uint> *get_hashed_row_indices(uint index);
+  std::vector<uint> get_hashed_row_indices(uint index);
 
   uint row_count;
   uint blooms_per_row;

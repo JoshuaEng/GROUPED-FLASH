@@ -26,12 +26,16 @@ void do_group(size_t b, size_t r, size_t reps, size_t range, uint *hashes,
   unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
 
   auto begin = Clock::now();
-  auto end = Clock::now();
   float etime_0;
 
   // Create index
   FLING *fling = new FLING(r, b, hashes, max_reps, hash_family, range, reps, NUMBASE);
   fling->finalize_construction();
+
+
+  auto end = Clock::now();
+  etime_0 = (end - begin).count() / 1000000;
+  cout << "Indexing took " << etime_0 << "ms." << endl;
 
   // Do queries
   cout << "Querying..." << endl;
@@ -50,7 +54,7 @@ void do_group(size_t b, size_t r, size_t reps, size_t range, uint *hashes,
     delete[] recall_buffer;
   }
   end = Clock::now();
-  omp_set_num_threads(20);
+  omp_set_num_threads(80);
 
   etime_0 = (end - begin).count() / 1000000;
   std::cout << "Queried " << NUMQUERY << " datapoints, used " << etime_0
@@ -71,7 +75,6 @@ void do_normal(size_t reservoir, size_t reps, size_t range, uint *hashes, uint *
   unsigned int *queryOutputs = new unsigned int[NUMQUERY * TOPK]();
 
   auto begin = Clock::now();
-  auto end = Clock::now();
   float etime_0;
 
   // Dimension not used so just pass in -1
@@ -89,13 +92,17 @@ void do_normal(size_t reservoir, size_t reps, size_t range, uint *hashes, uint *
     start = end;
   }
 
+  auto end = Clock::now();
+  etime_0 = (end - begin).count() / 1000000;
+  cout << "Indexing took " << etime_0 << "ms." << endl;
+
   std::cout << "Querying..." << endl;
   omp_set_num_threads(1);
   begin = Clock::now();
   myReservoir->ann(NUMQUERY, query_sparse_indice, query_sparse_val, query_sparse_marker,
                    queryOutputs, TOPK);
   end = Clock::now();
-  omp_set_num_threads(20);
+  omp_set_num_threads(80);
   etime_0 = (end - begin).count() / 1000000;
   std::cout << "Queried " << NUMQUERY << " datapoints, used " << etime_0
             << "ms." << endl;
@@ -108,7 +115,7 @@ void do_normal(size_t reservoir, size_t reps, size_t range, uint *hashes, uint *
 
 void benchmark_sparse() {
 
-  omp_set_num_threads(20);
+  omp_set_num_threads(80);
 
   float etime_0, etime_1, etime_2;
   auto begin = Clock::now();
