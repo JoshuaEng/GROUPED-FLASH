@@ -188,6 +188,7 @@ void FLING::query(int *data_ids, float *data_vals, int *data_marker,
             query_output[num_found] = point;
             if (++num_found == query_goal) {
               // cout << "Using threshhold " << rep << endl;
+              free(num_counts);
               return;
             }
           } else {
