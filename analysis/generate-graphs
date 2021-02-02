@@ -1,55 +1,61 @@
 #!/bin/bash
 
-python3 recall_precision.py url .. 1 -save &
-python3 recall_precision.py url .. 10 -save &
-python3 recall_precision.py webspam .. 1 -save &
-python3 recall_precision.py webspam .. 10 -save &
-python3 recall_precision.py promethion .. 1 -save &
-python3 recall_precision.py promethion .. 10 -save &
-python3 recall_precision.py genomes .. 1 -save &
-python3 recall_precision.py genomes .. 10 -save &
-python3 recall_precision.py proteomes .. 1 -save &
-python3 recall_precision.py proteomes .. 10 -save &
-python3 recall_precision.py yfcc .. 1 -save &
-python3 recall_precision.py yfcc .. 10 -save &
+python recall_precision.py url .. 1 -save &
+python recall_precision.py url .. 10 -save &
+python recall_precision.py webspam .. 1 -save &
+python recall_precision.py webspam .. 10 -save &
+python recall_precision.py promethion .. 1 -save &
+python recall_precision.py promethion .. 10 -save &
+python recall_precision.py genomes .. 1 -save &
+python recall_precision.py genomes .. 10 -save &
+python recall_precision.py proteomes .. 1 -save &
+python recall_precision.py proteomes .. 10 -save &
+python recall_precision.py yfcc .. 1 -save &
+python recall_precision.py yfcc .. 10 -save &
 
-python3 recall_time.py url .. R1@1 -save &
-python3 recall_time.py url .. R1@10 -save &
-python3 recall_time.py url .. R1@100 -save &
-python3 recall_time.py url .. R10@10 -save &
-python3 recall_time.py url .. R10@100 -save &
+python recall_time.py url .. R1@1 -save &
+python recall_time.py url .. R1@10 -save &
+python recall_time.py url .. R1@100 -save &
+python recall_time.py url .. R10@10 -save &
+python recall_time.py url .. R10@100 -save &
 
-python3 recall_time.py webspam .. R1@1 -save &
-python3 recall_time.py webspam .. R1@10 -save &
-python3 recall_time.py webspam .. R1@100 -save &
-python3 recall_time.py webspam .. R10@10 -save &
-python3 recall_time.py webspam .. R10@100 -save &
+python recall_time.py webspam .. R1@1 -save &
+python recall_time.py webspam .. R1@10 -save &
+python recall_time.py webspam .. R1@100 -save &
+python recall_time.py webspam .. R10@10 -save &
+python recall_time.py webspam .. R10@100 -save &
 
-python3 recall_time.py promethion .. R1@1 -save &
-python3 recall_time.py promethion .. R1@10 -save &
-python3 recall_time.py promethion .. R1@100 -save &
-python3 recall_time.py promethion .. R10@10 -save &
-python3 recall_time.py promethion .. R10@100 -save &
+python recall_time.py promethion .. R1@1 -save &
+python recall_time.py promethion .. R1@10 -save &
+python recall_time.py promethion .. R1@100 -save &
+python recall_time.py promethion .. R10@10 -save &
+python recall_time.py promethion .. R10@100 -save &
 
-python3 recall_time.py genomes .. R1@1 -save &
-python3 recall_time.py genomes .. R1@10 -save &
-python3 recall_time.py genomes .. R1@100 -save &
-python3 recall_time.py genomes .. R10@10 -save &
-python3 recall_time.py genomes .. R10@100 -save &
+python recall_time.py genomes .. R1@1 -save &
+python recall_time.py genomes .. R1@10 -save &
+python recall_time.py genomes .. R1@100 -save &
+python recall_time.py genomes .. R10@10 -save &
+python recall_time.py genomes .. R10@100 -save &
 
-python3 recall_time.py proteomes .. R1@1 -save &
-python3 recall_time.py proteomes .. R1@10 -save &
-python3 recall_time.py proteomes .. R1@100 -save &
-python3 recall_time.py proteomes .. R10@10 -save &
-python3 recall_time.py proteomes .. R10@100 -save &
+python recall_time.py proteomes .. R1@1 -save &
+python recall_time.py proteomes .. R1@10 -save &
+python recall_time.py proteomes .. R1@100 -save &
+python recall_time.py proteomes .. R10@10 -save &
+python recall_time.py proteomes .. R10@100 -save &
 
-python3 recall_time.py yfcc .. R1@1 -save -cutoff &
+python recall_time.py yfcc .. R1@1 -save -cutoff &
+python recall_time.py yfcc .. R1@10 -save -cutoff &
+python recall_time.py yfcc .. R1@100 -save -cutoff &
+python recall_time.py yfcc .. R10@10 -save &
+python recall_time.py yfcc .. R10@100 -save &
 
 wait
-convert "url-R1at100.png" "promethion-R10at100.png" "yfcc-R1at1.png"  +append temp1.png
-convert "webspam-R1at100.png" "genomes-R10at100.png" "proteomes-R10at100.png" +append temp2.png
-convert "url-1.png" "promethion-10.png" "yfcc-1.png"  +append temp3.png
-convert "webspam-1.png" "genomes-10.png" "proteomes-10.png"  +append temp4.png
-convert temp1.png temp3.png temp2.png temp4.png -append all.png
-convert temp1.png temp3.png -append some.png
+convert "genomes-R1at100.png" "proteomes-R1at100.png" "promethion-R1at100.png" +append temp1.png
+convert "url-R1at100.png" "webspam-R1at100.png" "yfcc-R1at1.png" +append temp2.png
+# convert "url-1.png" "promethion-10.png" "yfcc-1.png"  +append temp3.png
+# convert "webspam-1.png" "genomes-10.png" "proteomes-10.png"  +append temp4.png
+# convert temp1.png temp3.png temp2.png temp4.png -append all.png
+convert temp1.png temp2.png -append some.png
+rm temp1.png
+rm temp2.png
 

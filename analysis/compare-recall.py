@@ -1,12 +1,12 @@
-from get_data import get_all_data
+from get_data import get_data
 import traceback
 
-dataset = "promethion"
+dataset = "yfcc"
 goal = 0.4
 recalls = []
-topk = "R10"
+topk = "R1"
 max_time = 20
-for method, data in get_all_data(dataset):
+for method, data in get_data(dataset):
 	try:
 		file_name = "../" + method + "_" + dataset + ".txt"
 		best_recall = 0

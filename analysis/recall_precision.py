@@ -1,7 +1,8 @@
 import matplotlib
 import numpy as np
 import argparse
-from get_data import get_all_data_colored
+from get_data import get_data_colored, get_dataset_title
+import traceback
 
 parser = argparse.ArgumentParser()
 parser.add_argument("dataset")
@@ -19,22 +20,25 @@ if save:
 import matplotlib.pyplot as plt
 
 def get_pareto(record):
-	record.sort(key = lambda x: x[2])
+	record.sort(key = lambda x: x[3])
 	record = record[::-1]
 	result = [record[0]]
 	for i in range(1, len(record)):
-		if result[-1][3] < record[i][3]:
+		if result[-1][2] < record[i][2]:
 			result.append(record[i])
 	return result
 	
 titlefontsize = 22
 axisfontsize = 18
 labelfontsize = 12
+# markers = ["s", "x"]
+# times = [2, 20]
+# linestyles = ["--", "-."]
 markers = ["s"]
 times = [20]
 linestyles = ["--"]
 
-all_data = get_all_data_colored(dataset)
+all_data = get_data_colored(dataset)
 for method, data, c in all_data:
 	for ls, mark, t in list(zip(linestyles, markers, times)): 
 		try:
@@ -44,8 +48,8 @@ for method, data, c in all_data:
 			print(method, "failed in recall precision on", dataset)
 			pass
 
-plt.legend(fontsize = labelfontsize)
-plt.title(f"{dataset}: Top-{compare_by} Recall".title(),fontsize = titlefontsize)
+plt.legend(fontsize = labelfontsize, loc = 'lower left')
+plt.title(f"{get_dataset_title(dataset)}: Top-{compare_by} Nearest Neighbours",fontsize = titlefontsize)
 plt.xlabel("Recall",fontsize = axisfontsize)
 plt.ylabel("Precision",fontsize = axisfontsize)
 

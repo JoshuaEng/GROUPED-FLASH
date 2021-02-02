@@ -15,41 +15,65 @@ def _read_hnsw(file_name):
 def _read_flash(file_name):
 	record = []
 	with open(file_name, "r") as f:
+		time = -1
+		saved = ("", "")
 		while True:
 			line = f.readline()
+			if line.startswith("STAT"):
+				saved = (line, "")
+			if line.startswith("Queried"):
+				time = float(line.strip().split(" ")[-1][:-3])
+			if line.startswith("Indexing"):
+				saved = (saved[0], line)
+			if line.startswith("R") and "k" not in line and "@" in line:
+				record.append((line.split()[0], time / num_queries, float(line.split()[2]),  float(line.split()[2])/int(line.split()[0].split("@")[1])*int(line.split()[0].split("@")[0][1:]), saved))
 			if line == "":
 				break
-			if line.startswith("STAT"):
-				while True:
-					line = f.readline()
-					if line.startswith("Queried"):
-						time = float(line.strip().split(" ")[-1][:-3])
-					if line.startswith("R") and "k" not in line:
-						record.append((line.split()[0], time / num_queries, float(line.split()[2]),  float(line.split()[2])/int(line.split()[0].split("@")[1])*int(line.split()[0].split("@")[0][1:])))
-					if line == "":
-						break
 	return record
 
-def _get_raw_data(file_name):   
-	if "hnsw" in file_name or "falconn" in file_name:
+def _get_raw_data(file_name, cut):   
+	if "hnsw" in file_name or "falconn" in file_name or "inverted" in file_name or "faiss" in file_name:
 		return _read_hnsw(file_name)
 	else:
-		return _read_flash(file_name)
+		if cut:
+			return [(a,b,c,d) for (a,b,c,d,e) in _read_flash(file_name)]
+		else:
+			return _read_flash(file_name)
 
-methods = ["flinng", "flash", "hnsw", "falconn"]
-colors = {"flinng":"#264478","flash":"#F08406", "hnsw":"#232f3e", "falconn":"#900603"}
+methods = ["flinng", "falconn","hnsw", "faiss", "flash", "inverted"]
+raw_colors = \
+	"""
+	#1f55ab
+	#9955a7
+	#d75f8e
+	#f48073
+	#f5ad65
+	#111111
+	"""
+colors = {methods[i]: raw_colors.split()[i] for i in range(len(methods))}
 
-def get_all_data(dataset):
+def get_data(dataset):
 	data = []
 	for method in methods:
 		file_name = "../" + method + "_" + dataset + ".txt"
 		try:
-			data.append((method, _get_raw_data(file_name)))
+			data.append((method, _get_raw_data(file_name, True)))
 		except:
 			# print(method, "failed in get data on", dataset)
 			# traceback.print_exc()
 			pass
 	return data
 
-def get_all_data_colored(dataset):
-	return [(method, data, colors[method]) for method, data in get_all_data(dataset)]
+def get_data_colored(dataset):
+	return [(method, data, colors[method]) for method, data in get_data(dataset)]
+
+
+size_datasets = ["yfcc"]
+def get_all_size_data(method):
+	return {dataset: _get_raw_data("../" + method + "_" + dataset + "_index_info.txt", False) for dataset in size_datasets}
+
+title_map = {"genomes": "RefSeqG", "proteomes": "RefSeqP", "url": "URL", "yfcc": "YFCC100M", "promethion": "PromethION"}
+def get_dataset_title(dataset):
+	if dataset in title_map:
+		return title_map[dataset]
+	return dataset.title()

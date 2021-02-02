@@ -1,7 +1,8 @@
 import argparse
 import matplotlib
 import math
-from get_data import get_all_data_colored
+from get_data import get_data_colored, get_dataset_title
+import traceback
 
 # Instantiate the parser
 parser = argparse.ArgumentParser(description='Compare FLASH and FLINNG')
@@ -37,19 +38,20 @@ labelfontsize = 12
 mark = "s"
 ls = "--"
 
-all_data = get_all_data_colored(dataset)
+all_data = get_data_colored(dataset)
 for method, data, c in all_data:
 		try:
 			filtered = get_pareto([d for d in data if d[0] == compare_by and (not cutoff or d[2] > 0.8)])
 			plt.plot([d[2] for d in filtered], [math.log10(1000 / d[1]) for d in filtered if d[1] != 0], color = c, linestyle = ls, marker = mark, label = method.upper(), alpha = 0.8)
 		except:
 			print(method, "failed in recall time on", dataset)
+			# traceback.print_exc()
 			pass
 		
-plt.legend(fontsize=labelfontsize)
+plt.legend(fontsize=labelfontsize, loc = 'lower left')
 plt.xlabel(compare_by, fontsize=axisfontsize)
 plt.ylabel('Queries per second (log 10)', fontsize=axisfontsize)
-plt.title((dataset).title(), fontsize=titlefontsize)
+plt.title(get_dataset_title(dataset), fontsize=titlefontsize)
 if save:
 	valid = compare_by.replace("@", "at")
 	plt.savefig(f"{dataset}-{valid}.png", bbox_inches='tight')

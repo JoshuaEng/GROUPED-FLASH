@@ -1,13 +1,13 @@
 import traceback
-from get_data import get_all_data
+from get_data import get_data
 
 num_queries = 10000
 	
-dataset = "promethion"
-goal = 0.8
-compare_by = "R10@100"
+dataset = "yfcc"
+goal = 0.99
+compare_by = "R1@100"
 times = []
-for method, data in get_all_data(dataset):
+for method, data in get_data(dataset):
 	try:
 		best_time = float("inf")
 		
