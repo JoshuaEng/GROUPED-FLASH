@@ -18,14 +18,14 @@
 
 using namespace std;
 
-vector<uint> *FLING::get_hashed_row_indices(uint index) {
+vector<uint> FLING::get_hashed_row_indices(uint index) {
   string key = to_string(index);
   uint key_length = to_string(index).size();
-  vector<uint> *hashvals = new vector<uint>;
+  vector<uint> hashvals(0);
   uint op;
   for (uint i = 0; i < row_count; i++) {
     MurmurHash3_x86_32(key.c_str(), key_length, i, &op); // seed is row number
-    hashvals->push_back(op % blooms_per_row);
+    hashvals.push_back(op % blooms_per_row);
   }
   return hashvals;
 }
@@ -54,7 +54,7 @@ FLING::FLING(uint row_count, uint blooms_per_row, uint *hashes, uint num_hashes_
   vector<vector<uint>> *row_indices_arr = new vector<vector<uint>>(num_points);
 #pragma omp parallel for
   for (uint i = 0; i < num_points; i++) {
-    row_indices_arr->at(i) = *get_hashed_row_indices(i);
+    row_indices_arr->at(i) = get_hashed_row_indices(i);
   }
 
   cout << "Creating meta rambo" << endl;
@@ -94,7 +94,7 @@ void FLING::do_inserts() {
   vector<vector<uint>> *row_indices_arr = new vector<vector<uint>>(num_points);
 #pragma omp parallel for
   for (uint i = 0; i < num_points; i++) {
-    row_indices_arr->at(i) = *get_hashed_row_indices(i);
+    row_indices_arr->at(i) = get_hashed_row_indices(i);
   }
 
   cout << "Populating FLINNG" << endl;
