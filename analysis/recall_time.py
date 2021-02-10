@@ -35,14 +35,13 @@ def get_pareto(record):
 titlefontsize = 22
 axisfontsize = 18
 labelfontsize = 12
-mark = "s"
 ls = "--"
 
 all_data = get_data_colored(dataset)
-for method, data, c in all_data:
+for method, data, c, mark, marksize in all_data:
 		try:
 			filtered = get_pareto([d for d in data if d[0] == compare_by and (not cutoff or d[2] > 0.8)])
-			plt.plot([d[2] for d in filtered], [math.log10(1000 / d[1]) for d in filtered if d[1] != 0], color = c, linestyle = ls, marker = mark, label = method.upper(), alpha = 0.8)
+			plt.plot([d[2] for d in filtered], [math.log10(1000 / d[1]) for d in filtered if d[1] != 0], color = c, linestyle = ls, marker = mark, label = method.upper(), alpha = 0.8, markersize=marksize)
 		except:
 			print(method, "failed in recall time on", dataset)
 			# traceback.print_exc()

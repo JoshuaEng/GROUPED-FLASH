@@ -34,16 +34,15 @@ labelfontsize = 12
 # markers = ["s", "x"]
 # times = [2, 20]
 # linestyles = ["--", "-."]
-markers = ["s"]
 times = [20]
 linestyles = ["--"]
 
 all_data = get_data_colored(dataset)
-for method, data, c in all_data:
-	for ls, mark, t in list(zip(linestyles, markers, times)): 
+for method, data, c, mark, marksize in all_data:
+	for ls, t in list(zip(linestyles, times)): 
 		try:
 			filtered = get_pareto([d for d in data if d[1] < t and d[0].startswith("R" + compare_by + "@")])
-			plt.plot([d[2] for d in filtered], [d[3] for d in filtered], color = c, linestyle = ls, marker = mark, label = method.upper()+" ("+str(t)+"ms)", alpha = 0.8)
+			plt.plot([d[2] for d in filtered], [d[3] for d in filtered], color = c, linestyle = ls, marker = mark, label = method.upper()+" ("+str(t)+"ms)", alpha = 0.8, markersize = marksize)
 		except:
 			print(method, "failed in recall precision on", dataset)
 			pass

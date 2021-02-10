@@ -50,7 +50,10 @@ raw_colors = \
 	#f5ad65
 	#111111
 	"""
+raw_markers = [("s", 6.5), ("*", 7.5), ("^", 7.5), ("d", 8), ("o", 6.5), ("h", 12)] 
 colors = {methods[i]: raw_colors.split()[i] for i in range(len(methods))}
+markers = {methods[i]:raw_markers[i][0] for i in range(len(methods))}
+markersizes = {methods[i]:raw_markers[i][1] for i in range(len(methods))}
 
 def get_data(dataset):
 	data = []
@@ -65,7 +68,7 @@ def get_data(dataset):
 	return data
 
 def get_data_colored(dataset):
-	return [(method, data, colors[method]) for method, data in get_data(dataset)]
+	return [(method, data, colors[method], markers[method], markersizes[method]) for method, data in get_data(dataset)]
 
 
 size_datasets = ["yfcc"]
